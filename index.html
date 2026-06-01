@@ -7,17 +7,27 @@
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <script>
-// ── PROTEÇÃO POR TOKEN ──────────────────────────────────────────
-const TOKENS_VALIDOS = [
-  "reset5256","reset3977","reset3257",
-  "reset8207","reset5520","reset1656",
-  "reset5287","reset5724","reset1401",
-  "reset7448","reset5381","reset8223",
-  "reset6750","reset2908","reset4681",
-  "reset7124","reset4584","reset9313",
-  "reset8769","reset2178"
-];
+// ── URL DO APPS SCRIPT — cole aqui após publicar ────────
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwgQXU-Zh2dSgNsrFCaiTI5B7zP31CAxH19z3SIrsOa7d55IXr8dMrP-PQMltj2ehc/exec";
 
+// ── CACHE DE RANKING DA COMUNIDADE ──────────────────────
+// { "Corpo": [{acao, media, vezes, emocao}, ...], "Segurança": [...], ... }
+let rankingComunidade = {};
+
+async function carregarRanking(necessidade) {
+  const token = sessionStorage.getItem("re-token");
+  if (!token || !necessidade || APPS_SCRIPT_URL.startsWith("COLE")) return;
+  try {
+    const url = `${APPS_SCRIPT_URL}?acao=ranking&necessidade=${encodeURIComponent(necessidade)}&token=${encodeURIComponent(token)}`;
+    const res  = await fetch(url);
+    const json = await res.json();
+    if (json.ok && json.dados) {
+      rankingComunidade[necessidade] = json.dados;
+    }
+  } catch(_) {}
+}
+
+// ── PROTEÇÃO POR TOKEN (via Apps Script) ────────────────
 (function verificarAcesso() {
   const sessao = sessionStorage.getItem("re-auth");
   if (sessao === "ok") return;
@@ -74,7 +84,7 @@ const TOKENS_VALIDOS = [
           <span onclick="toggleSenha()" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:18px;user-select:none;color:#ffffff;" id="olho">👁</span>
         </div>
 
-        <button onclick="tentarAcesso()" style="
+        <button id="btn-acessar" onclick="tentarAcesso()" style="
           width:100%;max-width:320px;padding:15px;
           border-radius:14px;border:none;
           background:linear-gradient(135deg,#F0904A,#E8601A);
@@ -86,24 +96,49 @@ const TOKENS_VALIDOS = [
         " onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">Acessar</button>
 
         <p id="erro-msg" style="font-size:12px;color:#E8601A;margin-top:14px;min-height:18px;font-weight:400;position:relative;z-index:1;"></p>
-
-
       </div>
     `;
   });
 
-  window.tentarAcesso = function () {
+  window.tentarAcesso = async function () {
     const senha = document.getElementById("campo-senha").value.trim();
-    if (TOKENS_VALIDOS.includes(senha)) {
-      sessionStorage.setItem("re-auth", "ok");
-      sessionStorage.setItem("re-token", senha);
-      location.reload();
-    } else {
-      const erro = document.getElementById("erro-msg");
-      erro.textContent = "Senha incorreta. Verifique e tente novamente.";
-      const campo = document.getElementById("campo-senha");
-      campo.style.border = "1.5px solid #E8601A";
-      setTimeout(() => { erro.textContent = ""; campo.style.border = "1.5px solid rgba(244,237,224,0.2)"; }, 3000);
+    const btn   = document.getElementById("btn-acessar");
+    const erro  = document.getElementById("erro-msg");
+    const campo = document.getElementById("campo-senha");
+
+    if (!senha) return;
+
+    btn.textContent = "Verificando…";
+    btn.disabled = true;
+
+    try {
+      let valido = false;
+
+      // Se Apps Script configurado, valida no servidor
+      if (!APPS_SCRIPT_URL.startsWith("COLE")) {
+        const res  = await fetch(APPS_SCRIPT_URL, {
+          method: "POST",
+          body: JSON.stringify({ acao: "validarToken", token: senha })
+        });
+        const json = await res.json();
+        valido = json.ok === true;
+      }
+
+      if (valido) {
+        sessionStorage.setItem("re-auth", "ok");
+        sessionStorage.setItem("re-token", senha);
+        location.reload();
+      } else {
+        erro.textContent = "Senha incorreta. Verifique e tente novamente.";
+        campo.style.border = "1.5px solid #E8601A";
+        btn.textContent = "Acessar";
+        btn.disabled = false;
+        setTimeout(() => { erro.textContent = ""; campo.style.border = "1.5px solid rgba(244,237,224,0.2)"; }, 3000);
+      }
+    } catch(_) {
+      erro.textContent = "Erro de conexão. Tente novamente.";
+      btn.textContent = "Acessar";
+      btn.disabled = false;
     }
   };
 
@@ -1088,11 +1123,25 @@ function calcDiagNeed() {
   });
   const sorted = Object.entries(scores).sort((a,b) => b[1]-a[1]);
   const top1 = sorted[0][1] > 0 ? sorted[0][0] : null;
-  const top2 = sorted[1] && sorted[1][1] > 0 ? sorted[1][0] : null;
+  const top2 = (sorted[1] && sorted[1][1] > 0 && sorted[1][1] === sorted[0][1]) ? sorted[1][0] : null;
   return { primary: top1, secondary: top2 };
 }
 
 // ── STATE ─────────────────────────────────────────────
+// Gera ID único por registro
+function gerarId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+}
+
+// Verifica se o último registro está sem avaliação
+function ultimoRegistroSemAvaliacao() {
+  const entries = loadHistory();
+  if (!entries.length) return null;
+  const ultimo = entries[0];
+  if (ultimo.action && (ultimo.rating === null || ultimo.rating === undefined)) return ultimo;
+  return null;
+}
+
 let state = {
   step: 0, mode: null, emotion: null,
   refinedNeed: null, eventText: '',
@@ -1474,16 +1523,44 @@ function renderNeed(c) {
   }
 }
 
+// Monta badge de avaliação da comunidade para uma ação
+function badgeComunidade(nk, textoAcao) {
+  const dados = rankingComunidade[nk] || [];
+  const item  = dados.find(d => d.acao === textoAcao);
+  if (!item || item.vezes < 2) return '';
+  const estrelas = '⭐'.repeat(Math.round(item.media));
+  return `<span style="
+    display:inline-block;margin-top:6px;
+    font-size:11px;color:rgba(255,255,255,0.55);
+    font-family:'Poppins',sans-serif;font-weight:300;
+  ">${estrelas} ${item.media.toFixed(1)} · escolhida ${item.vezes}x pela comunidade</span>`;
+}
+
 function renderAction(c) {
   const nk = needKey();
   const nk2 = needKey2();
   const list = ACTIONS[state.mode][nk] || [];
   const isPos = state.mode === 'positive';
 
+  // Carrega ranking da comunidade em background e re-renderiza quando chegar
+  if (!rankingComunidade[nk]) {
+    carregarRanking(nk).then(() => {
+      const currentC = document.getElementById('card-content');
+      if (currentC && state.step === 6) renderAction(currentC);
+    });
+  }
+  if (nk2 && !rankingComunidade[nk2]) {
+    carregarRanking(nk2).then(() => {
+      const currentC = document.getElementById('card-content');
+      if (currentC && state.step === 6) renderAction(currentC);
+    });
+  }
+
   const btns = list.map(a => `
     <button class="action-btn ${state.action === a ? 'selected-'+state.mode : ''}"
       onclick="selectAction('${a.replace(/'/g,"\\'")}')">
       ${a}
+      ${badgeComunidade(nk, a)}
     </button>
   `).join('');
 
@@ -1496,6 +1573,7 @@ function renderAction(c) {
       <button class="action-btn ${state.action === a ? 'selected-'+state.mode : ''}"
         onclick="selectAction('${a.replace(/'/g,"\\'")}')">
         ${a}
+        ${badgeComunidade(nk2, a)}
       </button>
     `).join('');
     const label2 = isPos ? `${n2.icon} Para celebrar ${nk2}` : `${n2.icon} Para ${nk2}`;
@@ -1558,9 +1636,29 @@ function finish() {
     eventText: state.eventText,
     bodyText: state.bodyText,
     celebrateText: state.celebrateText,
-    rating: null
+    rating: null,
+    registroId: gerarId()
   };
   addToHistory(entry);
+
+  // Envia dados anônimos para a comunidade (sem identificar a pessoa)
+  if (!APPS_SCRIPT_URL.startsWith("COLE") && finalAction) {
+    const token = sessionStorage.getItem("re-token") || "";
+    fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        acao:          "salvarRegistro",
+        token,
+        registroId:    entry.registroId,
+        modo:          state.mode,
+        emocao:        state.emotion,
+        necessidade1:  nk,
+        necessidade2:  state.diagNeed ? state.diagNeed.secondary : null,
+        acao_escolhida: finalAction,
+        estrelas:      null
+      })
+    }).catch(() => {});
+  }
   state.step = 7;
   render();
 }
@@ -1590,9 +1688,23 @@ function renderComplete(c) {
       ${secondNeedLine}
       <p class="summary-row" style="margin:0"><strong>Hoje eu vou:</strong> ${finalAction}</p>
     </div>
-    <button class="btn-restart" style="border-color:${accent()};color:${accent()}" onclick="resetDiary()">
+${(() => {
+    const entries = loadHistory();
+    const ultimo = entries.length ? entries[0] : null;
+    const bloqueado = ultimo && ultimo.action && (ultimo.rating === null || ultimo.rating === undefined);
+    if (bloqueado) {
+      return `<div style="background:rgba(232,96,26,0.1);border:1.5px solid rgba(232,96,26,0.3);border-radius:14px;padding:16px 18px;margin-bottom:12px;text-align:center">
+        <p style="font-size:13px;color:#E8601A;font-family:'Poppins',sans-serif;font-weight:500;margin-bottom:4px">Avalie sua ação primeiro ⭐</p>
+        <p style="font-size:12px;color:rgba(255,255,255,0.5);font-family:'Poppins',sans-serif;font-weight:300">Vá em Minha semana e dê uma nota antes de fazer um novo registro.</p>
+      </div>
+      <button class="btn-restart" style="border-color:rgba(255,255,255,0.15);color:rgba(255,255,255,0.25);cursor:not-allowed" disabled>
+        Novo registro
+      </button>`;
+    }
+    return `<button class="btn-restart" style="border-color:${accent()};color:${accent()}" onclick="resetDiary()">
       Novo registro
-    </button>
+    </button>`;
+  })()}
     <button onclick="openWeek()" style="width:100%;background:transparent;border:2px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px;font-size:13px;cursor:pointer;font-family:'Poppins',sans-serif;color:rgba(255,255,255,0.5);transition:all 0.15s" onmouseover="this.style.borderColor='rgba(255,255,255,0.35)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)'">
       📅 Ver minha semana
     </button>
@@ -1743,7 +1855,30 @@ function renderWeek() {
     <button class="btn-clear-week" onclick="confirmClearHistory()">🗑 Limpar histórico desta semana</button>`;
 }
 
-function rateEntry(index, rating) { saveRating(index, rating); renderWeek(); }
+function rateEntry(index, rating) {
+  saveRating(index, rating);
+  renderWeek();
+  if (!APPS_SCRIPT_URL.startsWith("COLE")) {
+    const entries = loadHistory();
+    const entry = entries[index];
+    if (!entry || !entry.action) return;
+    const token = sessionStorage.getItem("re-token") || "";
+    fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        acao:           "atualizarEstrelas",
+        token,
+        registroId:     entry.registroId || null,
+        modo:           entry.mode,
+        emocao:         entry.emotion,
+        necessidade1:   entry.need,
+        necessidade2:   entry.need2 || null,
+        acao_escolhida: entry.action,
+        estrelas:       rating
+      })
+    }).catch(() => {});
+  }
+}
 
 function confirmClearHistory() {
   if (confirm('Tem certeza que deseja limpar todo o histórico? Essa ação não pode ser desfeita.')) {
