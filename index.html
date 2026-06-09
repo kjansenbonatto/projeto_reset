@@ -6,150 +6,7 @@
 <title>Reset Emocional · Kamila Bonatto</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-<script>
-// ── URL DO APPS SCRIPT — cole aqui após publicar ────────
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwgQXU-Zh2dSgNsrFCaiTI5B7zP31CAxH19z3SIrsOa7d55IXr8dMrP-PQMltj2ehc/exec";
 
-// ── CACHE DE RANKING DA COMUNIDADE ──────────────────────
-// { "Corpo": [{acao, media, vezes, emocao}, ...], "Segurança": [...], ... }
-let rankingComunidade = {};
-
-async function carregarRanking(necessidade) {
-  const token = sessionStorage.getItem("re-token");
-  if (!token || !necessidade || APPS_SCRIPT_URL.startsWith("COLE")) return;
-  try {
-    const url = `${APPS_SCRIPT_URL}?acao=ranking&necessidade=${encodeURIComponent(necessidade)}&token=${encodeURIComponent(token)}`;
-    const res  = await fetch(url);
-    const json = await res.json();
-    if (json.ok && json.dados) {
-      rankingComunidade[necessidade] = json.dados;
-    }
-  } catch(_) {}
-}
-
-// ── PROTEÇÃO POR TOKEN (via Apps Script) ────────────────
-(function verificarAcesso() {
-  const sessao = sessionStorage.getItem("re-auth");
-  if (sessao === "ok") return;
-
-  document.addEventListener("DOMContentLoaded", function () {
-    document.body.innerHTML = `
-      <div id="bloqueio" style="
-        min-height:100vh;
-        display:flex;
-        flex-direction:column;
-        align-items:center;
-        justify-content:center;
-        text-align:center;
-        padding:40px 24px;
-        font-family:'Poppins',sans-serif;
-        background: linear-gradient(to right, #0a0a0a 0%, #1a1a1a 30%, #2e2e2e 60%, #4a4040 100%);
-        color:#F4EDE0;
-        position:relative;
-        overflow:hidden;
-      ">
-        <div style="position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg viewBox=\\'0 0 256 256\\' xmlns=\\'http://www.w3.org/2000/svg\\'%3E%3Cfilter id=\\'noise\\'%3E%3CfeTurbulence type=\\'fractalNoise\\' baseFrequency=\\'0.9\\' numOctaves=\\'4\\' stitchTiles=\\'stitch\\'/%3E%3C/filter%3E%3Crect width=\\'100%25\\' height=\\'100%25\\' filter=\\'url(%23noise)\\' opacity=\\'0.04\\'/%3E%3C/svg%3E');pointer-events:none;opacity:0.5;"></div>
-
-        <p style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#E8601A;font-weight:500;margin-bottom:20px;position:relative;z-index:1;">
-          Acesso exclusivo
-        </p>
-        <h1 style="font-family:'Lora',serif;font-size:clamp(32px,7vw,48px);font-weight:400;line-height:1.15;max-width:380px;margin-bottom:8px;color:#ffffff;position:relative;z-index:1;">
-          Reset<br><em style="color:#E8601A;font-style:italic">Emocional</em>
-        </h1>
-        <p style="font-size:12px;color:#ffffff;letter-spacing:1.5px;font-family:'Poppins',sans-serif;font-weight:300;margin-bottom:24px;position:relative;z-index:1;">por Kamila Bonatto</p>
-        <p style="font-size:13px;color:#ffffff;line-height:1.7;max-width:300px;font-weight:300;margin-bottom:40px;position:relative;z-index:1;">
-          Digite a senha que você recebeu para acessar a ferramenta.
-        </p>
-
-        <div style="width:100%;max-width:320px;margin-bottom:12px;position:relative;z-index:1;">
-          <input
-            id="campo-senha"
-            type="password"
-            placeholder="Sua senha de acesso"
-            style="
-              width:100%;box-sizing:border-box;
-              padding:15px 50px 15px 20px;
-              border-radius:14px;
-              border:1.5px solid rgba(244,237,224,0.2);
-              background:rgba(244,237,224,0.08);
-              font-family:'Poppins',sans-serif;
-              font-size:14px;color:#ffffff;
-              outline:none;transition:border 0.2s;
-              backdrop-filter:blur(4px);
-            "
-            onkeydown="if(event.key==='Enter') tentarAcesso()"
-            onfocus="this.style.border='1.5px solid #E8601A'"
-            onblur="this.style.border='1.5px solid rgba(244,237,224,0.2)'"
-          />
-          <span onclick="toggleSenha()" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:18px;user-select:none;color:#ffffff;" id="olho">👁</span>
-        </div>
-
-        <button id="btn-acessar" onclick="tentarAcesso()" style="
-          width:100%;max-width:320px;padding:15px;
-          border-radius:14px;border:none;
-          background:linear-gradient(135deg,#F0904A,#E8601A);
-          color:#ffffff;font-family:'Poppins',sans-serif;
-          font-size:14px;font-weight:500;cursor:pointer;
-          letter-spacing:0.5px;
-          box-shadow:0 8px 24px rgba(232,96,26,0.3);
-          transition:opacity 0.2s;position:relative;z-index:1;
-        " onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">Acessar</button>
-
-        <p id="erro-msg" style="font-size:12px;color:#E8601A;margin-top:14px;min-height:18px;font-weight:400;position:relative;z-index:1;"></p>
-      </div>
-    `;
-  });
-
-  window.tentarAcesso = async function () {
-    const senha = document.getElementById("campo-senha").value.trim();
-    const btn   = document.getElementById("btn-acessar");
-    const erro  = document.getElementById("erro-msg");
-    const campo = document.getElementById("campo-senha");
-
-    if (!senha) return;
-
-    btn.textContent = "Verificando…";
-    btn.disabled = true;
-
-    try {
-      let valido = false;
-
-      // Se Apps Script configurado, valida no servidor
-      if (!APPS_SCRIPT_URL.startsWith("COLE")) {
-        const res  = await fetch(APPS_SCRIPT_URL, {
-          method: "POST",
-          body: JSON.stringify({ acao: "validarToken", token: senha })
-        });
-        const json = await res.json();
-        valido = json.ok === true;
-      }
-
-      if (valido) {
-        sessionStorage.setItem("re-auth", "ok");
-        sessionStorage.setItem("re-token", senha);
-        location.reload();
-      } else {
-        erro.textContent = "Senha incorreta. Verifique e tente novamente.";
-        campo.style.border = "1.5px solid #E8601A";
-        btn.textContent = "Acessar";
-        btn.disabled = false;
-        setTimeout(() => { erro.textContent = ""; campo.style.border = "1.5px solid rgba(244,237,224,0.2)"; }, 3000);
-      }
-    } catch(_) {
-      erro.textContent = "Erro de conexão. Tente novamente.";
-      btn.textContent = "Acessar";
-      btn.disabled = false;
-    }
-  };
-
-  window.toggleSenha = function () {
-    const campo = document.getElementById("campo-senha");
-    const olho  = document.getElementById("olho");
-    if (campo.type === "password") { campo.type = "text"; olho.textContent = "🙈"; }
-    else { campo.type = "password"; olho.textContent = "👁"; }
-  };
-})();
-</script>
 
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -850,8 +707,43 @@ textarea::placeholder { color: rgba(255,255,255,0.25); }
 <!-- Círculos decorativos de fundo (todas as telas) -->
 <div class="deco-circles"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
 
+<!-- ══ LOGIN ══ -->
+<div id="screen-login" style="
+  display:none;
+  min-height:100vh;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:40px 24px;
+  font-family:'Poppins',sans-serif;
+  background: linear-gradient(to right, #0a0a0a 0%, #1a1a1a 30%, #2e2e2e 60%, #4a4040 100%);
+  color:#F4EDE0;
+  position:relative;
+  overflow:hidden;
+">
+  <div style="position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg viewBox=%220 0 256 256%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noise%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noise)%22 opacity=%220.04%22/%3E%3C/svg%3E');pointer-events:none;opacity:0.5;"></div>
+  <p style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#E8601A;font-weight:500;margin-bottom:20px;position:relative;z-index:1;">Acesso exclusivo</p>
+  <h1 style="font-family:'Lora',serif;font-size:clamp(32px,7vw,48px);font-weight:400;line-height:1.15;max-width:380px;margin-bottom:8px;color:#ffffff;position:relative;z-index:1;">
+    Reset<br><em style="color:#E8601A;font-style:italic">Emocional</em>
+  </h1>
+  <p style="font-size:12px;color:#ffffff;letter-spacing:1.5px;font-family:'Poppins',sans-serif;font-weight:300;margin-bottom:24px;position:relative;z-index:1;">por Kamila Bonatto</p>
+  <p style="font-size:13px;color:#ffffff;line-height:1.7;max-width:300px;font-weight:300;margin-bottom:40px;position:relative;z-index:1;">Digite a senha que você recebeu para acessar a ferramenta.</p>
+  <div style="width:100%;max-width:320px;margin-bottom:12px;position:relative;z-index:1;">
+    <input id="campo-senha" type="password" placeholder="Sua senha de acesso"
+      style="width:100%;box-sizing:border-box;padding:15px 50px 15px 20px;border-radius:14px;border:1.5px solid rgba(244,237,224,0.2);background:rgba(244,237,224,0.08);font-family:'Poppins',sans-serif;font-size:14px;color:#ffffff;outline:none;transition:border 0.2s;backdrop-filter:blur(4px);"
+      onkeydown="if(event.key==='Enter') tentarAcesso()"
+      onfocus="this.style.border='1.5px solid #E8601A'"
+      onblur="this.style.border='1.5px solid rgba(244,237,224,0.2)'"
+    />
+    <span onclick="toggleSenha()" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:18px;user-select:none;color:#ffffff;" id="olho">👁</span>
+  </div>
+  <button id="btn-acessar" onclick="tentarAcesso()" style="width:100%;max-width:320px;padding:15px;border-radius:14px;border:none;background:linear-gradient(135deg,#F0904A,#E8601A);color:#ffffff;font-family:'Poppins',sans-serif;font-size:14px;font-weight:500;cursor:pointer;letter-spacing:0.5px;box-shadow:0 8px 24px rgba(232,96,26,0.3);transition:opacity 0.2s;position:relative;z-index:1;" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">Acessar</button>
+  <p id="erro-msg" style="font-size:12px;color:#E8601A;margin-top:14px;min-height:18px;font-weight:400;position:relative;z-index:1;"></p>
+</div>
+
 <!-- ══ LANDING ══ -->
-<div class="screen active" id="screen-landing">
+<div class="screen" id="screen-landing">
   <div class="landing-lines"><span></span><span></span><span></span></div>
   <h1 class="landing-title">Reset<em>Emocional</em></h1>
   <p class="landing-desc">Um espaço só seu para nomear o que sente, entender o que precisa e escolher uma ação de cuidado — todos os dias.</p>
@@ -900,11 +792,97 @@ textarea::placeholder { color: rgba(255,255,255,0.25); }
 </div>
 
 <script>
-// ── EMOÇÕES (apenas as 10 pedidas, para ambos os modos) ──
-// Para o modo "positive" mantemos as originais que fazem sentido celebrar
-// Para o modo "challenging" usamos exatamente a lista solicitada
+// ══════════════════════════════════════════════════════
+//  Reset Emocional v5 · Script principal
+// ══════════════════════════════════════════════════════
+
+// ── URL DO APPS SCRIPT ───────────────────────────────
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwgQXU-Zh2dSgNsrFCaiTI5B7zP31CAxH19z3SIrsOa7d55IXr8dMrP-PQMltj2ehc/exec";
+
+// ── CACHE DE RANKING ─────────────────────────────────
+let rankingComunidade = {};
+
+async function carregarRanking(necessidade) {
+  const token = sessionStorage.getItem("re-token");
+  if (!token || !necessidade) return;
+  try {
+    const url = `${APPS_SCRIPT_URL}?acao=ranking&necessidade=${encodeURIComponent(necessidade)}&token=${encodeURIComponent(token)}`;
+    const res  = await fetch(url);
+    const json = await res.json();
+    if (json.ok && json.dados) rankingComunidade[necessidade] = json.dados;
+  } catch(_) {}
+}
+
+// ── TELA DE LOGIN ────────────────────────────────────
+// Renderiza a tela de login dentro do #screen-login (sem sobrescrever o body)
+function mostrarLogin() {
+  document.getElementById('screen-login').style.display = 'flex';
+  document.getElementById('screen-landing').classList.remove('active');
+  document.getElementById('screen-diary').classList.remove('active');
+  document.getElementById('screen-week').classList.remove('active');
+}
+
+function esconderLogin() {
+  document.getElementById('screen-login').style.display = 'none';
+}
+
+async function tentarAcesso() {
+  const senha = document.getElementById("campo-senha").value.trim();
+  const btn   = document.getElementById("btn-acessar");
+  const erro  = document.getElementById("erro-msg");
+  const campo = document.getElementById("campo-senha");
+
+  if (!senha) return;
+  btn.textContent = "Verificando…";
+  btn.disabled = true;
+
+  try {
+    const res  = await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({ acao: "validarToken", token: senha })
+    });
+    const json = await res.json();
+
+    if (json.ok === true) {
+      sessionStorage.setItem("re-auth", "ok");
+      sessionStorage.setItem("re-token", senha);
+      esconderLogin();
+      document.getElementById('screen-landing').classList.add('active');
+      verificarRascunhoLanding();
+    } else {
+      erro.textContent = "Senha incorreta. Verifique e tente novamente.";
+      campo.style.border = "1.5px solid #E8601A";
+      btn.textContent = "Acessar";
+      btn.disabled = false;
+      setTimeout(() => { erro.textContent = ""; campo.style.border = "1.5px solid rgba(244,237,224,0.2)"; }, 3000);
+    }
+  } catch(err) {
+    erro.textContent = "Erro de conexão. Tente novamente.";
+    btn.textContent = "Acessar";
+    btn.disabled = false;
+  }
+}
+
+function toggleSenha() {
+  const campo = document.getElementById("campo-senha");
+  const olho  = document.getElementById("olho");
+  if (campo.type === "password") { campo.type = "text"; olho.textContent = "🙈"; }
+  else { campo.type = "password"; olho.textContent = "👁"; }
+}
+
+// Verifica auth ao carregar
+document.addEventListener('DOMContentLoaded', function() {
+  const auth = sessionStorage.getItem("re-auth");
+  if (auth !== "ok") {
+    mostrarLogin();
+  } else {
+    document.getElementById('screen-landing').classList.add('active');
+    verificarRascunhoLanding();
+  }
+});
+
+// ── EMOÇÕES ───────────────────────────────────────────
 const EMOTIONS_CHALLENGING = [
-  { name: "Alegria",   icon: "🌟", need: "Corpo" },
   { name: "Tristeza",  icon: "🌧️", need: "Conexões", refine: { question: "O que ou quem perdi e ainda não acolhi?", reflection: "A tristeza sempre aponta para algo que importava. Vale entender o que exatamente.", options: [{ label: "Sinto falta de alguém ou de conexão", need: "Conexões" }, { label: "Me sinto diminuída ou invisível", need: "Valor" }] } },
   { name: "Medo",      icon: "🫧", need: "Segurança", refine: { question: "O que estou evitando encarar?", reflection: "Às vezes o medo vem de fora, outras vezes o corpo já está no limite e não aguenta mais.", options: [{ label: "Algo externo me ameaça", need: "Segurança" }, { label: "Meu corpo e energia estão no limite", need: "Corpo" }] } },
   { name: "Nojo",      icon: "🍂", need: "Valor" },
@@ -953,90 +931,333 @@ const NEEDS = {
   }
 };
 
-const ACTIONS = {
-  positive: {
-    Corpo: [
-      "Reconhecer em voz alta que seu corpo está bem — isso é conquista",
-      "Continuar a rotina que está funcionando, sem mudar nada hoje",
-      "Agradecer ao seu corpo com um momento de prazer: banho demorado, alongamento, dança",
-      "Dormir cedo esta noite como forma de honrar o que construiu",
-      "Preparar uma refeição que você ama, com calma e presença"
-    ],
-    Segurança: [
-      "Anotar o que está te dando segurança agora — registrar fortalece",
-      "Reforçar a rotina que está te ancorando: não abandone o que funciona",
-      "Compartilhar com alguém próximo o quanto você se sente estável",
-      "Planejar o próximo passo com calma, porque você tem chão firme",
-      "Usar esse momento para organizar algo que estava pendente"
-    ],
-    Conexões: [
-      "Mandar uma mensagem para quem te fez sentir conectada",
-      "Marcar um encontro com essa pessoa em breve",
-      "Escrever o que essa conexão significa para você",
-      "Estar presente de verdade na próxima conversa — sem celular, sem pressa",
-      "Dizer em voz alta para essa pessoa o quanto ela importa"
-    ],
-    Valor: [
-      "Escrever três coisas que você fez bem hoje — sem diminuir nenhuma",
-      "Celebrar o limite que você colocou ou a decisão que tomou",
-      "Registrar essa conquista para reler nos dias difíceis",
-      "Fazer algo só porque você gosta, sem justificar para ninguém",
-      "Compartilhar essa conquista com alguém que torce por você"
-    ],
-    Crescimento: [
-      "Registrar o que te trouxe essa sensação de propósito",
-      "Planejar mais do que te faz sentir assim — é isso que te move",
-      "Compartilhar sua conquista com alguém de confiança",
-      "Dar o próximo passo em algo que você vem construindo",
-      "Agradecer por estar em movimento, mesmo nos dias difíceis"
-    ]
-  },
-  challenging: {
-    Corpo: [
-      "Dormir mais cedo esta noite — seu corpo está pedindo descanso",
-      "Beber água agora e fazer uma refeição com calma, sem tela",
-      "Tirar 10 minutos de descanso sem celular, sem fazer nada",
-      "Alongar o corpo por 5 minutos, prestando atenção em cada parte",
-      "Sair para caminhar, mesmo que por 10 minutos",
-      "Marcar aquela consulta que você vem adiando"
-    ],
-    Segurança: [
-      "Escrever o que está te gerando insegurança — tirar da cabeça já alivia",
-      "Fazer uma lista: o que posso controlar e o que não posso",
-      "Listar 3 coisas que ainda estão estáveis na sua vida agora",
-      "Dar um pequeno passo financeiro: organizar uma conta, um planejamento simples",
-      "Criar uma pequena rotina para amanhã — previsibilidade traz segurança",
-      "Conversar com alguém de confiança sobre o que você está sentindo"
-    ],
-    Conexões: [
-      "Mandar uma mensagem para alguém que você sente saudade",
-      "Marcar um café ou uma conversa com alguém que te faz bem",
-      "Falar como você está se sentindo para uma pessoa de confiança",
-      "Identificar alguém que está drenando sua energia e diminuir o contato por um tempo",
-      "Fazer algo em grupo: uma aula, um encontro, um evento",
-      "Escrever o que você precisa de uma relação que não está recebendo"
-    ],
-    Valor: [
-      "Escrever 3 coisas que você admira em si mesma hoje",
-      "Quando o erro aparecer, perguntar: eu falaria isso com uma amiga?",
-      "Dizer não para algo que você não quer fazer",
-      "Fazer algo só porque você gosta, sem precisar justificar",
-      "Anotar uma conquista sua que você nunca parou para reconhecer",
-      "Diminuir o tempo em comparações — redes sociais, conversas, pensamentos"
-    ],
-    Crescimento: [
-      "Escrever uma coisa pequena que você pode fazer hoje em direção ao que sonha",
-      "Aprender algo novo por 10 minutos — um vídeo, um podcast, uma leitura",
-      "Perguntar a si mesma: o que eu faria se não tivesse medo?",
-      "Resgatar um projeto ou sonho que você deixou de lado",
-      "Definir uma meta pequena e alcançável para essa semana",
-      "Escrever quem você quer ser daqui a 1 ano — com detalhes"
-    ]
-  }
+// ── AÇÕES POR EMOÇÃO × NECESSIDADE ─────────────────────
+// Chave: "modo|emocao|necessidade" → array de ações específicas
+// Fallback: "modo|*|necessidade" → ações genéricas por necessidade
+const ACTIONS_MAP = {
+  // ── MODO POSITIVO ────────────────────────────────────
+  "positive|Alegria|Corpo": [
+    "Reconhecer em voz alta que seu corpo está bem — isso é conquista",
+    "Continuar a rotina que está funcionando, sem mudar nada hoje",
+    "Agradecer ao seu corpo com um momento de prazer: banho demorado, alongamento, dança",
+    "Dormir cedo esta noite como forma de honrar o que construiu",
+    "Preparar uma refeição que você ama, com calma e presença"
+  ],
+  "positive|Alegria|Segurança": [
+    "Anotar o que está te dando segurança agora — registrar fortalece",
+    "Planejar o próximo passo com calma, porque você tem chão firme",
+    "Compartilhar com alguém próximo o quanto você se sente estável",
+    "Usar esse momento de alegria para organizar algo que estava pendente",
+    "Reforçar a rotina que está te ancorando: não abandone o que funciona"
+  ],
+  "positive|Alegria|Conexões": [
+    "Compartilhar essa alegria com alguém que torce por você",
+    "Mandar uma mensagem para quem te fez sentir conectada hoje",
+    "Marcar um encontro para celebrar com quem você ama",
+    "Estar presente de verdade na próxima conversa — sem celular, sem pressa",
+    "Dizer em voz alta para essa pessoa o quanto ela importa"
+  ],
+  "positive|Alegria|Valor": [
+    "Escrever três coisas que você fez bem hoje — sem diminuir nenhuma",
+    "Celebrar o limite que você colocou ou a decisão que tomou",
+    "Registrar essa conquista para reler nos dias difíceis",
+    "Fazer algo só porque você gosta, sem justificar para ninguém",
+    "Compartilhar essa conquista com alguém que torce por você"
+  ],
+  "positive|Alegria|Crescimento": [
+    "Registrar o que te trouxe essa sensação de propósito",
+    "Planejar mais do que te faz sentir assim — é isso que te move",
+    "Dar o próximo passo em algo que você vem construindo",
+    "Compartilhar sua conquista com alguém de confiança",
+    "Agradecer por estar em movimento, mesmo nos dias difíceis"
+  ],
+  "positive|Satisfação|Corpo": [
+    "Reconhecer que cuidar do corpo valeu a pena — celebre isso",
+    "Continuar a rotina que está funcionando, sem mudar nada hoje",
+    "Agradecer ao seu corpo com um momento de prazer consciente",
+    "Dormir cedo esta noite como forma de honrar o que construiu",
+    "Preparar uma refeição que você ama, com calma e presença"
+  ],
+  "positive|Satisfação|Valor": [
+    "Escrever o que contribuiu para essa satisfação — você merece saber",
+    "Celebrar a decisão que tomou sem precisar da aprovação de ninguém",
+    "Registrar esse momento para reler quando vier a dúvida",
+    "Fazer algo só porque você gosta, sem justificar para ninguém",
+    "Reconhecer uma conquista que você ainda não tinha parado para ver"
+  ],
+  "positive|Serenidade|Corpo": [
+    "Honrar esse relaxamento sem culpa — descansar é produtivo",
+    "Continuar o que está te trazendo essa tranquilidade no corpo",
+    "Ficar presente nesse momento: respirar fundo, sentir o ambiente",
+    "Dormir cedo esta noite para prolongar essa serenidade",
+    "Fazer um alongamento suave para registrar essa leveza no corpo"
+  ],
+  "positive|Serenidade|Segurança": [
+    "Anotar o que está te dando essa sensação de chão firme",
+    "Planejar algo pequeno com calma, aproveitando esse momento estável",
+    "Compartilhar com alguém de confiança o quanto você se sente bem",
+    "Reforçar a rotina que está te ancorando: não abandone o que funciona",
+    "Usar essa serenidade para organizar algo que estava pendente"
+  ],
+  "positive|Confiança|Valor": [
+    "Escrever de onde veio essa confiança — ela tem nome e história",
+    "Celebrar o limite que você colocou ou a decisão que tomou com segurança",
+    "Registrar essa conquista para reler nos dias de dúvida",
+    "Fazer algo desafiador agora, enquanto você está com essa energia",
+    "Compartilhar essa força com alguém que precisa de inspiração"
+  ],
+  "positive|Confiança|Crescimento": [
+    "Dar o próximo passo em algo que você vem adiando — agora é a hora",
+    "Escrever o que essa confiança te permite sonhar agora",
+    "Planejar mais do que te faz sentir assim — é isso que te move",
+    "Compartilhar sua conquista com alguém de confiança",
+    "Definir um objetivo ousado para os próximos 30 dias"
+  ],
+  "positive|Amor|Conexões": [
+    "Dizer em voz alta para essa pessoa o quanto ela importa",
+    "Escrever o que essa conexão significa para você",
+    "Marcar um encontro com essa pessoa em breve",
+    "Estar presente de verdade na próxima conversa — sem celular, sem pressa",
+    "Mandar uma mensagem para quem te fez sentir amada hoje"
+  ],
+  "positive|Amor|Valor": [
+    "Reconhecer que ser amada começa por se amar — escreva 3 coisas boas de você",
+    "Celebrar o vínculo que você cultivou com cuidado",
+    "Registrar esse sentimento para reler quando vier a dúvida",
+    "Fazer algo só porque você gosta, sem justificar para ninguém",
+    "Compartilhar essa alegria com alguém que torce por você"
+  ],
+  "positive|Surpresa|Segurança": [
+    "Anotar o que essa surpresa revelou sobre o que está funcionando",
+    "Planejar o próximo passo com calma, porque você tem chão firme",
+    "Compartilhar com alguém próximo essa novidade boa",
+    "Reforçar a rotina que está te ancorando: não abandone o que funciona",
+    "Usar esse momento para organizar algo que estava pendente"
+  ],
+  "positive|Surpresa|Crescimento": [
+    "Registrar o que te trouxe essa surpresa positiva — pode se repetir",
+    "Planejar mais do que te faz sentir assim — é isso que te move",
+    "Dar o próximo passo em algo que você vem construindo",
+    "Agradecer por estar aberta ao inesperado — isso é uma força",
+    "Escrever o que essa surpresa revelou sobre você"
+  ],
+
+  // ── MODO CHALLENGING ─────────────────────────────────
+  "challenging|Tristeza|Conexões": [
+    "Mandar uma mensagem para alguém que você sente saudade",
+    "Falar como você está se sentindo para uma pessoa de confiança",
+    "Marcar um café ou uma conversa com alguém que te faz bem",
+    "Escrever o que você precisa de uma relação que não está recebendo",
+    "Chorar se precisar — e depois chamar alguém para estar perto"
+  ],
+  "challenging|Tristeza|Valor": [
+    "Escrever uma carta para si mesma com gentileza, como faria para uma amiga",
+    "Identificar uma coisa pequena que você ainda admira em você",
+    "Permitir-se sentir a tristeza sem se julgar por ela",
+    "Anotar o que essa tristeza está revelando sobre o que importa para você",
+    "Escrever 3 coisas que você fez bem esta semana, por menores que sejam"
+  ],
+  "challenging|Tristeza|Corpo": [
+    "Beber água, comer algo nutritivo e se deitar se precisar",
+    "Sair para uma caminhada curta — o movimento alivia o peso emocional",
+    "Tirar 10 minutos sem tela, só sentindo o ambiente ao redor",
+    "Fazer uma respiração profunda: inspirar 4s, segurar 4s, soltar 6s",
+    "Dormir mais cedo esta noite — o corpo carrega a tristeza"
+  ],
+  "challenging|Medo|Segurança": [
+    "Fazer uma lista: o que posso controlar e o que não posso",
+    "Listar 3 coisas que ainda estão estáveis na sua vida agora",
+    "Criar uma pequena rotina para amanhã — previsibilidade traz segurança",
+    "Conversar com alguém de confiança sobre o que você está temendo",
+    "Escrever o pior cenário e o mais provável — raramente são iguais"
+  ],
+  "challenging|Medo|Corpo": [
+    "Fazer respiração abdominal por 3 minutos para acalmar o sistema nervoso",
+    "Sair para caminhar — o movimento dissolve o medo acumulado no corpo",
+    "Beber água e comer algo — o corpo assustado precisa de cuidado básico",
+    "Alongar o corpo por 5 minutos, prestando atenção em cada parte",
+    "Tirar 10 minutos de descanso sem celular, sem fazer nada"
+  ],
+  "challenging|Nojo|Valor": [
+    "Escrever o que foi violado em você — nomear é o primeiro passo",
+    "Identificar um limite que precisa ser dito em voz alta",
+    "Afastar-se da situação ou pessoa que gerou esse sentimento",
+    "Perguntar a si mesma: o que eu realmente valorizo e não estou honrando?",
+    "Dizer não para algo que você não quer fazer"
+  ],
+  "challenging|Nojo|Conexões": [
+    "Identificar alguém que está drenando sua energia e diminuir o contato por um tempo",
+    "Escrever o que você precisa de uma relação que não está recebendo",
+    "Conversar com alguém de confiança sobre o que está te incomodando",
+    "Afastar-se da situação que gerou esse sentimento — você tem direito",
+    "Falar como você está se sentindo para alguém que te respeita"
+  ],
+  "challenging|Raiva|Segurança": [
+    "Escrever o que está te gerando insegurança — tirar da cabeça já alivia",
+    "Fazer uma lista: o que posso controlar e o que não posso",
+    "Criar uma pequena rotina para amanhã — previsibilidade traz segurança",
+    "Listar 3 coisas que ainda estão estáveis na sua vida agora",
+    "Dar um pequeno passo concreto para recuperar o controle sobre a situação"
+  ],
+  "challenging|Raiva|Valor": [
+    "Escrever o que foi desrespeitado — a raiva tem uma mensagem importante",
+    "Identificar um limite que precisa ser estabelecido ou reforçado",
+    "Quando a autocrítica vier, perguntar: eu falaria isso com uma amiga?",
+    "Fazer algo só porque você gosta, sem precisar justificar para ninguém",
+    "Dizer não para algo que você não quer fazer — agora é o momento"
+  ],
+  "challenging|Surpresa|Segurança": [
+    "Fazer uma lista: o que posso controlar e o que não posso",
+    "Listar 3 coisas que ainda estão estáveis na sua vida agora",
+    "Criar uma pequena rotina para amanhã — previsibilidade traz segurança",
+    "Conversar com alguém de confiança sobre essa surpresa",
+    "Escrever o que mudou e o que permanece igual — isso ancora"
+  ],
+  "challenging|Ansiedade|Segurança": [
+    "Escrever o que está te gerando ansiedade — tirar da cabeça já alivia",
+    "Fazer uma lista: o que posso controlar e o que não posso",
+    "Listar 3 coisas que ainda estão estáveis na sua vida agora",
+    "Criar uma pequena rotina para amanhã — previsibilidade traz segurança",
+    "Respirar: 4s inspirando, 4s segurando, 6s soltando — repita 5x"
+  ],
+  "challenging|Ansiedade|Corpo": [
+    "Fazer respiração abdominal por 3 minutos para acalmar o sistema nervoso",
+    "Sair para caminhar — o movimento dissolve a ansiedade acumulada",
+    "Beber água agora e comer algo com calma, sem tela",
+    "Tirar 10 minutos de descanso sem celular, sem fazer nada",
+    "Alongar o corpo por 5 minutos, prestando atenção em cada parte"
+  ],
+  "challenging|Inveja|Valor": [
+    "Escrever o que a inveja está revelando sobre o que você quer — sem julgamento",
+    "Diminuir o tempo em comparações — redes sociais, conversas, pensamentos",
+    "Escrever 3 coisas que você admira em si mesma hoje",
+    "Identificar um desejo seu que você ainda não se deu permissão de ter",
+    "Anotar uma conquista sua que você nunca parou para reconhecer"
+  ],
+  "challenging|Inveja|Crescimento": [
+    "Perguntar a si mesma: o que eu faria se não tivesse medo de querer isso?",
+    "Escrever uma coisa pequena que você pode fazer hoje em direção ao que sonha",
+    "Resgatar um projeto ou sonho que você deixou de lado",
+    "Definir uma meta pequena e alcançável para essa semana",
+    "Diminuir o tempo olhando para o que os outros têm — focar no seu caminho"
+  ],
+  "challenging|Vergonha|Valor": [
+    "Escrever uma carta para si mesma com gentileza, como faria para uma amiga",
+    "Quando a autocrítica vier, perguntar: eu falaria isso com uma amiga?",
+    "Identificar uma coisa pequena que você ainda admira em você",
+    "Permitir-se sentir sem se punir — vergonha não define quem você é",
+    "Anotar o que você gostaria de ter feito diferente — e o que aprendeu"
+  ],
+  "challenging|Vergonha|Conexões": [
+    "Falar com alguém de confiança sobre o que você está sentindo",
+    "Identificar se essa vergonha vem de um julgamento externo real ou imaginado",
+    "Escrever o que você precisaria ouvir agora e por que é difícil pedir",
+    "Afastar-se por um tempo de quem alimenta essa sensação em você",
+    "Lembrar que todo mundo erra — você não está sozinha nisso"
+  ],
+  "challenging|Tédio (sem vontade de nada, tudo parece igual)|Corpo": [
+    "Sair para caminhar, mesmo que por 10 minutos — o movimento cria energia",
+    "Tirar 10 minutos de descanso sem celular, sem fazer nada de verdade",
+    "Beber água e se alimentar bem — o tédio às vezes é sinal de corpo exausto",
+    "Dormir mais cedo esta noite — o corpo pode estar pedindo recuperação",
+    "Alongar o corpo por 5 minutos, prestando atenção em cada parte"
+  ],
+  "challenging|Tédio (sem vontade de nada, tudo parece igual)|Crescimento": [
+    "Escrever uma coisa pequena que você pode fazer hoje em direção ao que sonha",
+    "Aprender algo novo por 10 minutos — um vídeo, um podcast, uma leitura",
+    "Resgatar um projeto ou sonho que você deixou de lado",
+    "Perguntar a si mesma: o que eu faria se não tivesse medo?",
+    "Escrever quem você quer ser daqui a 1 ano — com detalhes"
+  ],
+
+  // ── FALLBACKS GENÉRICOS (quando não há combo específica) ─
+  "fallback|positive|Corpo": [
+    "Reconhecer em voz alta que seu corpo está bem — isso é conquista",
+    "Continuar a rotina que está funcionando, sem mudar nada hoje",
+    "Agradecer ao seu corpo com um momento de prazer: banho demorado, alongamento, dança",
+    "Dormir cedo esta noite como forma de honrar o que construiu",
+    "Preparar uma refeição que você ama, com calma e presença"
+  ],
+  "fallback|positive|Segurança": [
+    "Anotar o que está te dando segurança agora — registrar fortalece",
+    "Reforçar a rotina que está te ancorando: não abandone o que funciona",
+    "Compartilhar com alguém próximo o quanto você se sente estável",
+    "Planejar o próximo passo com calma, porque você tem chão firme",
+    "Usar esse momento para organizar algo que estava pendente"
+  ],
+  "fallback|positive|Conexões": [
+    "Mandar uma mensagem para quem te fez sentir conectada",
+    "Marcar um encontro com essa pessoa em breve",
+    "Escrever o que essa conexão significa para você",
+    "Estar presente de verdade na próxima conversa — sem celular, sem pressa",
+    "Dizer em voz alta para essa pessoa o quanto ela importa"
+  ],
+  "fallback|positive|Valor": [
+    "Escrever três coisas que você fez bem hoje — sem diminuir nenhuma",
+    "Celebrar o limite que você colocou ou a decisão que tomou",
+    "Registrar essa conquista para reler nos dias difíceis",
+    "Fazer algo só porque você gosta, sem justificar para ninguém",
+    "Compartilhar essa conquista com alguém que torce por você"
+  ],
+  "fallback|positive|Crescimento": [
+    "Registrar o que te trouxe essa sensação de propósito",
+    "Planejar mais do que te faz sentir assim — é isso que te move",
+    "Compartilhar sua conquista com alguém de confiança",
+    "Dar o próximo passo em algo que você vem construindo",
+    "Agradecer por estar em movimento, mesmo nos dias difíceis"
+  ],
+  "fallback|challenging|Corpo": [
+    "Dormir mais cedo esta noite — seu corpo está pedindo descanso",
+    "Beber água agora e fazer uma refeição com calma, sem tela",
+    "Tirar 10 minutos de descanso sem celular, sem fazer nada",
+    "Alongar o corpo por 5 minutos, prestando atenção em cada parte",
+    "Sair para caminhar, mesmo que por 10 minutos",
+    "Marcar aquela consulta que você vem adiando"
+  ],
+  "fallback|challenging|Segurança": [
+    "Escrever o que está te gerando insegurança — tirar da cabeça já alivia",
+    "Fazer uma lista: o que posso controlar e o que não posso",
+    "Listar 3 coisas que ainda estão estáveis na sua vida agora",
+    "Dar um pequeno passo financeiro: organizar uma conta, um planejamento simples",
+    "Criar uma pequena rotina para amanhã — previsibilidade traz segurança",
+    "Conversar com alguém de confiança sobre o que você está sentindo"
+  ],
+  "fallback|challenging|Conexões": [
+    "Mandar uma mensagem para alguém que você sente saudade",
+    "Marcar um café ou uma conversa com alguém que te faz bem",
+    "Falar como você está se sentindo para uma pessoa de confiança",
+    "Identificar alguém que está drenando sua energia e diminuir o contato por um tempo",
+    "Fazer algo em grupo: uma aula, um encontro, um evento",
+    "Escrever o que você precisa de uma relação que não está recebendo"
+  ],
+  "fallback|challenging|Valor": [
+    "Escrever 3 coisas que você admira em si mesma hoje",
+    "Quando o erro aparecer, perguntar: eu falaria isso com uma amiga?",
+    "Dizer não para algo que você não quer fazer",
+    "Fazer algo só porque você gosta, sem precisar justificar",
+    "Anotar uma conquista sua que você nunca parou para reconhecer",
+    "Diminuir o tempo em comparações — redes sociais, conversas, pensamentos"
+  ],
+  "fallback|challenging|Crescimento": [
+    "Escrever uma coisa pequena que você pode fazer hoje em direção ao que sonha",
+    "Aprender algo novo por 10 minutos — um vídeo, um podcast, uma leitura",
+    "Perguntar a si mesma: o que eu faria se não tivesse medo?",
+    "Resgatar um projeto ou sonho que você deixou de lado",
+    "Definir uma meta pequena e alcançável para essa semana",
+    "Escrever quem você quer ser daqui a 1 ano — com detalhes"
+  ]
 };
+
+// Retorna as ações para o estado atual (emoção × necessidade com fallback)
+function getActions(mode, emotion, need) {
+  const specific = ACTIONS_MAP[`${mode}|${emotion}|${need}`];
+  if (specific && specific.length) return specific;
+  return ACTIONS_MAP[`fallback|${mode}|${need}`] || [];
+}
 
 // ── HISTÓRICO ──────────────────────────────────────────
 const HISTORY_KEY_PREFIX = 're-history-';
+const STATE_KEY = 're-state-draft';
 
 function historyKey() {
   const token = sessionStorage.getItem('re-token') || 'default';
@@ -1055,6 +1276,32 @@ function addToHistory(entry) {
 function saveRating(index, rating) {
   const entries = loadHistory();
   if (entries[index]) { entries[index].rating = rating; saveHistory(entries); }
+}
+
+// Persiste o state atual no localStorage (chamado sempre que state muda de tela)
+function persistState() {
+  try {
+    // Não persiste step 7 (tela final — já foi salvo no histórico)
+    if (state.step === 7) { localStorage.removeItem(STATE_KEY); return; }
+    localStorage.setItem(STATE_KEY, JSON.stringify(state));
+  } catch(_) {}
+}
+
+// Restaura rascunho salvo, se existir
+function restoreState() {
+  try {
+    const raw = localStorage.getItem(STATE_KEY);
+    if (!raw) return false;
+    const saved = JSON.parse(raw);
+    // Só restaura se estava no meio de um fluxo (step > 0)
+    if (!saved || saved.step === 0 || saved.step === undefined) return false;
+    state = saved;
+    return true;
+  } catch(_) { return false; }
+}
+
+function clearStateCache() {
+  try { localStorage.removeItem(STATE_KEY); } catch(_) {}
 }
 
 // ── DIAGNÓSTICO — perguntas ────────────────────────────
@@ -1103,23 +1350,24 @@ const DIAG_GROUPS = [
 ];
 
 // Calcula scores do diagnóstico e retorna top-2 necessidades
+// Normaliza por porcentagem para que grupos com mais perguntas não levem vantagem
 function calcDiagNeed() {
   const scores = {};
   const isPos = state.mode === 'positive';
   DIAG_GROUPS.forEach(g => {
     let pts = 0;
+    const total = g.perguntas.length;
     g.perguntas.forEach((q, qi) => {
       const resp = state.diagRespostas[g.key + '_' + qi];
       if (resp === undefined) return;
       if (isPos) {
-        // modo positivo: "sim" indica necessidade bem suprida
         if (q.pontoNao && resp === 'sim') pts++;
       } else {
-        // modo challenging: "não" indica necessidade carente
         if (q.pontoNao && resp === 'nao') pts++;
       }
     });
-    scores[g.key] = pts;
+    // Pontuação como porcentagem de respostas relevantes (0–100)
+    scores[g.key] = total > 0 ? (pts / total) * 100 : 0;
   });
   const sorted = Object.entries(scores).sort((a,b) => b[1]-a[1]);
   const top1 = sorted[0][1] > 0 ? sorted[0][0] : null;
@@ -1174,6 +1422,51 @@ function orange() { return '#E8601A'; }
 function green()  { return '#4A5E42'; }
 function accent() { return state.mode === 'positive' ? green() : orange(); }
 
+// Mostra aviso de rascunho na landing se existir
+function verificarRascunhoLanding() {
+  try {
+    const raw = localStorage.getItem(STATE_KEY);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    if (!saved || !saved.step || saved.step === 0) return;
+    const btn = document.querySelector('.landing-btn');
+    if (!btn) return;
+    // evitar duplicar banner
+    if (document.getElementById('draft-banner')) return;
+    const banner = document.createElement('div');
+    banner.id = 'draft-banner';
+    banner.style.cssText = `
+      display:flex;align-items:center;gap:12px;
+      background:rgba(232,96,26,0.12);
+      border:1.5px solid rgba(232,96,26,0.3);
+      border-radius:16px;padding:14px 18px;
+      max-width:340px;margin:0 auto 20px;
+      text-align:left;position:relative;z-index:1;
+    `;
+    const emotionLabel = saved.emotion ? ` · ${saved.emotion}` : '';
+    banner.innerHTML = `
+      <span style="font-size:22px;flex-shrink:0">📝</span>
+      <div>
+        <p style="font-size:12px;font-weight:600;color:#E8601A;font-family:'Poppins',sans-serif;margin-bottom:2px">Registro em andamento${emotionLabel}</p>
+        <p style="font-size:11px;color:rgba(255,255,255,0.55);font-family:'Poppins',sans-serif;font-weight:300;line-height:1.5">Você tinha um registro em andamento. Clique em "Continuar" para retomar.</p>
+      </div>
+    `;
+    btn.textContent = 'Continuar registro →';
+    btn.insertAdjacentElement('beforebegin', banner);
+    const discardBtn = document.createElement('button');
+    discardBtn.id = 'draft-discard';
+    discardBtn.style.cssText = `font-size:11px;color:rgba(255,255,255,0.3);background:transparent;border:none;cursor:pointer;font-family:'Poppins',sans-serif;padding:4px 0;margin-bottom:12px;text-decoration:underline;position:relative;z-index:1;`;
+    discardBtn.textContent = 'Descartar e começar do zero';
+    discardBtn.onclick = function() {
+      clearStateCache();
+      btn.textContent = 'Começar meu registro →';
+      banner.remove();
+      discardBtn.remove();
+    };
+    btn.insertAdjacentElement('afterend', discardBtn);
+  } catch(_) {}
+}
+
 // ── TABS ──────────────────────────────────────────────
 function setTab(tab) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active','active-green'));
@@ -1188,6 +1481,7 @@ function setTab(tab) {
 function goToLanding() {
   document.getElementById('screen-diary').classList.remove('active');
   document.getElementById('screen-landing').classList.add('active');
+  clearStateCache();
   state = { step: 0, mode: null, emotion: null, refinedNeed: null, eventText: '', bodyText: '', celebrateText: '', action: null, customAction: '', diagRespostas: {}, diagNeed: null };
 }
 
@@ -1196,29 +1490,42 @@ function startDiary() {
   document.getElementById('screen-landing').classList.remove('active');
   document.getElementById('screen-diary').classList.add('active');
   document.getElementById('diary-date').textContent = new Date().toLocaleDateString('pt-BR');
+
+  // Restaura rascunho se houver progresso salvo
+  const hadDraft = restoreState();
+  if (!hadDraft) {
+    state = { step: 0, mode: null, emotion: null, refinedNeed: null, eventText: '', bodyText: '', celebrateText: '', action: null, customAction: '', diagRespostas: {}, diagNeed: null };
+  }
+
   setTab('inicio');
   render();
 }
 
 function render() {
   updateProgress();
+  persistState();
   const c = document.getElementById('card-content');
   c.innerHTML = '';
   const s = state.step;
-  if      (s === 0)   renderTone(c);
-  else if (s === 1)   renderEvent(c);
-  else if (s === 2)   renderBody(c);
-  else if (s === 3)   renderEmotion(c);
-  else if (s === 3.5) renderRefine(c);
-  else if (s === 3.8) renderDiagIntro(c);
-  else if (s === 4.1) renderDiagGroup(c, 0);
-  else if (s === 4.2) renderDiagGroup(c, 1);
-  else if (s === 4.3) renderDiagGroup(c, 2);
-  else if (s === 4.4) renderDiagGroup(c, 3);
-  else if (s === 4.5) renderDiagGroup(c, 4);
-  else if (s === 5)   renderNeed(c);
-  else if (s === 6)   renderAction(c);
-  else                renderComplete(c);
+  try {
+    if      (s === 0)   renderTone(c);
+    else if (s === 1)   renderEvent(c);
+    else if (s === 2)   renderBody(c);
+    else if (s === 3)   renderEmotion(c);
+    else if (s === 3.5) renderRefine(c);
+    else if (s === 3.8) renderDiagIntro(c);
+    else if (s === 4.1) renderDiagGroup(c, 0);
+    else if (s === 4.2) renderDiagGroup(c, 1);
+    else if (s === 4.3) renderDiagGroup(c, 2);
+    else if (s === 4.4) renderDiagGroup(c, 3);
+    else if (s === 4.5) renderDiagGroup(c, 4);
+    else if (s === 5)   renderNeed(c);
+    else if (s === 6)   renderAction(c);
+    else                renderComplete(c);
+  } catch(err) {
+    console.error('render() erro no step', s, err);
+    c.innerHTML = `<p style="color:#E8601A;font-family:'Poppins',sans-serif;font-size:13px;padding:20px">Erro ao carregar esta etapa.<br><br><button onclick="goTo(${Math.max(0, s-1)})" style="background:#E8601A;color:#fff;border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-family:'Poppins',sans-serif">← Voltar</button></p>`;
+  }
 
   const card = document.getElementById('diary-card');
   card.style.animation = 'none';
@@ -1539,7 +1846,7 @@ function badgeComunidade(nk, textoAcao) {
 function renderAction(c) {
   const nk = needKey();
   const nk2 = needKey2();
-  const list = ACTIONS[state.mode][nk] || [];
+  const list = getActions(state.mode, state.emotion, nk);
   const isPos = state.mode === 'positive';
 
   // Carrega ranking da comunidade em background e re-renderiza quando chegar
@@ -1566,8 +1873,8 @@ function renderAction(c) {
 
   // Sugestões para segunda necessidade (ambos os modos)
   let secondActionsHtml = '';
-  if (nk2 && ACTIONS[state.mode][nk2]) {
-    const list2 = ACTIONS[state.mode][nk2];
+  if (nk2 && (getActions(state.mode, state.emotion, nk2).length > 0)) {
+    const list2 = getActions(state.mode, state.emotion, nk2);
     const n2 = NEEDS[nk2];
     const btns2 = list2.map(a => `
       <button class="action-btn ${state.action === a ? 'selected-'+state.mode : ''}"
@@ -1713,6 +2020,7 @@ ${(() => {
 
 // ── WEEK ──────────────────────────────────────────────
 function openWeek() {
+  persistState(); // salva rascunho antes de sair para semana
   document.getElementById('screen-landing').classList.remove('active');
   document.getElementById('screen-diary').classList.remove('active');
   document.getElementById('screen-week').classList.add('active');
@@ -1841,7 +2149,7 @@ function renderWeek() {
               <div class="history-action-text">${action}</div>
             </div>
             <div>
-              <div class="history-action-label" style="text-align:right">Resultado</div>
+              <div class="history-action-label" style="text-align:right">Essa ação te ajudou?</div>
               <div class="stars-row" id="stars-${idx}">${starsHtml}</div>
               ${entry.rating ? `<p class="rating-saved-msg">${entry.rating}★ salvo</p>` : ''}
             </div>
@@ -1903,6 +2211,7 @@ function navRow(backStep, nextStep, disabled) {
 function goTo(s) { state.step = s; render(); }
 
 function resetDiary() {
+  clearStateCache();
   state = { step: 0, mode: null, emotion: null, refinedNeed: null, eventText: '', bodyText: '', celebrateText: '', action: null, customAction: '', diagRespostas: {}, diagNeed: null };
   render();
 }
