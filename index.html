@@ -88,6 +88,20 @@ html, body {
 }
 .landing-title em { color: var(--orange); font-style: italic; display: block; }
 
+.landing-greeting {
+  font-family: 'Lora', serif;
+  font-size: clamp(15px, 4vw, 19px);
+  font-style: italic;
+  color: rgba(244,237,224,0.92);
+  max-width: 420px;
+  margin-bottom: 16px;
+  line-height: 1.45;
+  opacity: 0;
+  animation: fadeUp 0.7s ease 0.05s forwards;
+  position: relative; z-index: 1;
+}
+.landing-greeting strong { color: var(--orange); font-weight: 400; font-style: normal; }
+
 .landing-desc {
   font-size: 15px;
   color: #ffffff;
@@ -745,6 +759,7 @@ textarea::placeholder { color: rgba(255,255,255,0.25); }
 <!-- ══ LANDING ══ -->
 <div class="screen" id="screen-landing">
   <div class="landing-lines"><span></span><span></span><span></span></div>
+  <p class="landing-greeting" id="landing-greeting" style="display:none"></p>
   <h1 class="landing-title">Reset<em>Emocional</em></h1>
   <p class="landing-desc">Um espaço só seu para nomear o que sente, entender o que precisa e escolher uma ação de cuidado — todos os dias.</p>
   <button class="landing-btn" onclick="startDiary()">Começar meu registro →</button>
@@ -786,7 +801,10 @@ textarea::placeholder { color: rgba(255,255,255,0.25); }
 <div class="screen" id="screen-week">
   <div class="week-header">
     <h2 class="week-title">Minha <em>semana</em></h2>
-    <button class="btn-week-back" onclick="closeWeek()">← Voltar</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn-week-back" onclick="weekToHome()">🏠 Início</button>
+      <button class="btn-week-back" onclick="closeWeek()">← Voltar</button>
+    </div>
   </div>
   <div id="week-content" style="width:100%;max-width:500px;"></div>
 </div>
@@ -811,6 +829,28 @@ async function carregarRanking(necessidade) {
     const json = await res.json();
     if (json.ok && json.dados) rankingComunidade[necessidade] = json.dados;
   } catch(_) {}
+}
+
+// ── RELEITURA DO PASSADO (busca no Sheets) ───────────
+// Procura o registro MAIS RECENTE da pessoa com a mesma emoção +
+// necessidade + modo, já avaliado com estrelas. Retorna null se não houver.
+async function buscarHistoricoCombinacao() {
+  const token = sessionStorage.getItem("re-token");
+  const nk = needKey();
+  if (!token || !state.emotion || !nk) return null;
+  try {
+    const url = `${APPS_SCRIPT_URL}?acao=historicoCombinacao`
+              + `&token=${encodeURIComponent(token)}`
+              + `&emocao=${encodeURIComponent(state.emotion)}`
+              + `&necessidade=${encodeURIComponent(nk)}`
+              + `&modo=${encodeURIComponent(state.mode)}`;
+    const res  = await fetch(url);
+    const json = await res.json();
+    if (json.ok && json.registro && json.registro.action && json.registro.rating) {
+      return json.registro;
+    }
+  } catch(_) {}
+  return null;
 }
 
 // ── TELA DE LOGIN ────────────────────────────────────
@@ -846,8 +886,11 @@ async function tentarAcesso() {
     if (json.ok === true) {
       sessionStorage.setItem("re-auth", "ok");
       sessionStorage.setItem("re-token", senha);
+      if (json.nome) sessionStorage.setItem("re-nome", json.nome);
+      else sessionStorage.removeItem("re-nome");
       esconderLogin();
       document.getElementById('screen-landing').classList.add('active');
+      mostrarBoasVindas();
       verificarRascunhoLanding();
     } else {
       erro.textContent = "Senha incorreta. Verifique e tente novamente.";
@@ -877,9 +920,29 @@ document.addEventListener('DOMContentLoaded', function() {
     mostrarLogin();
   } else {
     document.getElementById('screen-landing').classList.add('active');
+    mostrarBoasVindas();
     verificarRascunhoLanding();
   }
 });
+
+// ── BOAS-VINDAS POR PERÍODO DO DIA ────────────────────
+function mostrarBoasVindas() {
+  const el = document.getElementById('landing-greeting');
+  if (!el) return;
+  const nome = (sessionStorage.getItem('re-nome') || '').trim();
+  const primeiroNome = nome ? nome.split(/\s+/)[0] : '';
+
+  const h = new Date().getHours();
+  let saudacao, complemento;
+  if (h >= 5 && h < 12)       { saudacao = 'Bom dia';   complemento = 'Que bom começar o dia com você aqui.'; }
+  else if (h >= 12 && h < 18) { saudacao = 'Boa tarde'; complemento = 'Que bom te ver por aqui.'; }
+  else                        { saudacao = 'Boa noite'; complemento = 'Que bom que você veio.'; }
+
+  el.innerHTML = primeiroNome
+    ? `${saudacao}, <strong>${primeiroNome}</strong>. ${complemento}`
+    : `${saudacao}. ${complemento}`;
+  el.style.display = 'block';
+}
 
 // ── EMOÇÕES ───────────────────────────────────────────
 const EMOTIONS_CHALLENGING = [
@@ -891,6 +954,7 @@ const EMOTIONS_CHALLENGING = [
   { name: "Ansiedade", icon: "🌀", need: "Segurança" },
   { name: "Inveja",    icon: "🪞", need: "Valor" },
   { name: "Vergonha",  icon: "🌿", need: "Valor" },
+  { name: "Culpa",     icon: "🌫️", need: "Valor", refine: { question: "O que essa culpa está pedindo de você?", reflection: "A culpa aparece quando sentimos que algo importante foi ferido. Vale entender o que exatamente.", options: [{ label: "Quero reparar algo com alguém", need: "Conexões" }, { label: "Preciso me perdoar e seguir em frente", need: "Valor" }] } },
   { name: "Tédio (sem vontade de nada, tudo parece igual)", icon: "🪨", need: "Corpo" }
 ];
 
@@ -931,630 +995,572 @@ const NEEDS = {
   }
 };
 
+// ── MENSAGENS ACOLHEDORAS POR NECESSIDADE ──────────────
+// Aparecem na tela da necessidade, preparando para as ações
+const NEED_MESSAGES = {
+  positive: {
+    Corpo:       "Seu corpo te agradece. Às vezes o maior cuidado é simplesmente parar e ouvir o que ele precisa.",
+    Segurança:   "Você escolheu avançar mesmo sem ter certeza de tudo. Isso é coragem de verdade.",
+    Conexões:    "Você se deixou ser vista e sentida. Conexão de verdade começa quando a gente para de se esconder.",
+    Valor:       "Você se reconheceu. E isso muda tudo — porque ninguém cuida bem do que não aprecia.",
+    Crescimento: "Parabéns. Você está caminhando. Não precisa de grandes saltos — cada passo honesto já é muito."
+  },
+  challenging: {
+    Corpo:       "Seu corpo está cansado. Ele está te pedindo cuidado — e tudo bem parar para ouvir isso.",
+    Segurança:   "Você está precisando de mais estabilidade agora. É normal sentir isso, e você não precisa resolver tudo de uma vez.",
+    Conexões:    "Você está sentindo falta de conexão. De ser ouvida, de pertencer, de não estar sozinha nisso.",
+    Valor:       "Você está precisando se reconhecer. Algo dentro de você quer ser visto — e merece ser.",
+    Crescimento: "Você está sentindo que algo precisa mudar. Essa inquietação tem um propósito — vamos entender juntas."
+  }
+};
+
+// ── DESCRIÇÕES PARA ESCOLHA EM CASO DE EMPATE ──────────
+const NEED_DESC_CHOICE = {
+  positive: {
+    Corpo:       "Se for o seu corpo, você está se sentindo descansada, com energia, leve, bem cuidada por dentro.",
+    Segurança:   "Se for segurança, você está se sentindo estável, protegida, com sua rotina em ordem.",
+    Conexões:    "Se for conexão, você está se sentindo acompanhada, querida, parte de algo, próxima de quem importa.",
+    Valor:       "Se for valor, você está se sentindo suficiente, reconhecida, orgulhosa de quem você é.",
+    Crescimento: "Se for crescimento, você está se sentindo com propósito, em movimento, animada com o caminho que está construindo."
+  },
+  challenging: {
+    Corpo:       "Se for o seu corpo, você está se sentindo cansada, sem energia, com o corpo pesado ou pedindo descanso.",
+    Segurança:   "Se for segurança, você está se sentindo insegura, em alerta, preocupada com o que pode acontecer.",
+    Conexões:    "Se for conexão, você está se sentindo só, distante, com saudade de companhia ou de ser compreendida.",
+    Valor:       "Se for valor, você está se sentindo menor, insuficiente, se cobrando ou se comparando demais.",
+    Crescimento: "Se for crescimento, você está se sentindo travada, sem direção, como se algo precisasse mudar."
+  }
+};
+
 // ── AÇÕES POR EMOÇÃO × NECESSIDADE ─────────────────────
 // Chave: "modo|emocao|necessidade" → array de ações específicas
 // Fallback: "modo|*|necessidade" → ações genéricas por necessidade
 const ACTIONS_MAP = {
-  // ══════════════════════════════════════════════════
-  //  MODO POSITIVO
-  // ══════════════════════════════════════════════════
-
-  "positive|Alegria|Corpo": [
-    "Reconhecer em voz alta que seu corpo está bem — isso é conquista",
-    "Continuar a rotina que está funcionando, sem mudar nada hoje",
-    "Agradecer ao seu corpo com um momento de prazer: banho demorado, alongamento, dança",
-    "Dormir cedo esta noite como forma de honrar o que construiu",
-    "Preparar uma refeição que você ama, com calma e presença"
-  ],
-  "positive|Alegria|Segurança": [
-    "Anotar o que está te dando segurança agora — registrar fortalece",
-    "Planejar o próximo passo com calma, porque você tem chão firme",
-    "Compartilhar com alguém próximo o quanto você se sente estável",
-    "Usar esse momento de alegria para organizar algo que estava pendente",
-    "Reforçar a rotina que está te ancorando: não abandone o que funciona"
-  ],
-  "positive|Alegria|Conexões": [
-    "Compartilhar essa alegria com alguém que torce por você",
-    "Mandar uma mensagem para quem te fez sentir conectada hoje",
-    "Marcar um encontro para celebrar com quem você ama",
-    "Estar presente de verdade na próxima conversa — sem celular, sem pressa",
-    "Dizer em voz alta para essa pessoa o quanto ela importa"
-  ],
-  "positive|Alegria|Valor": [
-    "Escrever três coisas que você fez bem hoje — sem diminuir nenhuma",
-    "Celebrar o limite que você colocou ou a decisão que tomou",
-    "Registrar essa conquista para reler nos dias difíceis",
-    "Fazer algo só porque você gosta, sem justificar para ninguém",
-    "Compartilhar essa conquista com alguém que torce por você"
-  ],
-  "positive|Alegria|Crescimento": [
-    "Registrar o que te trouxe essa sensação de propósito",
-    "Planejar mais do que te faz sentir assim — é isso que te move",
-    "Dar o próximo passo em algo que você vem construindo",
-    "Compartilhar sua conquista com alguém de confiança",
-    "Agradecer por estar em movimento, mesmo nos dias difíceis"
-  ],
-
-  "positive|Satisfação|Corpo": [
-    "Reconhecer que cuidar do corpo valeu a pena — celebre isso",
-    "Continuar a rotina que está funcionando, sem mudar nada hoje",
-    "Agradecer ao seu corpo com um momento de prazer consciente",
-    "Dormir cedo esta noite como forma de honrar o que construiu",
-    "Preparar uma refeição que você ama, com calma e presença"
-  ],
-  "positive|Satisfação|Segurança": [
-    "Anotar o que está te dando segurança — registrar fortalece",
-    "Planejar o próximo passo com calma, porque você tem chão firme",
-    "Compartilhar com alguém próximo o quanto você se sente estável",
-    "Usar esse momento para organizar algo que estava pendente",
-    "Reforçar a rotina que está te ancorando: não abandone o que funciona"
-  ],
-  "positive|Satisfação|Conexões": [
-    "Compartilhar essa satisfação com alguém que torce por você",
-    "Mandar uma mensagem para quem contribuiu para esse sentimento",
-    "Marcar um encontro para celebrar com quem você ama",
-    "Estar presente de verdade na próxima conversa — sem celular, sem pressa",
-    "Dizer em voz alta para essa pessoa o quanto ela importa"
-  ],
-  "positive|Satisfação|Valor": [
-    "Escrever o que contribuiu para essa satisfação — você merece saber",
-    "Celebrar a decisão que tomou sem precisar da aprovação de ninguém",
-    "Registrar esse momento para reler quando vier a dúvida",
-    "Fazer algo só porque você gosta, sem justificar para ninguém",
-    "Reconhecer uma conquista que você ainda não tinha parado para ver"
-  ],
-  "positive|Satisfação|Crescimento": [
-    "Registrar o que te trouxe essa satisfação — pode se repetir",
-    "Planejar mais do que te faz sentir assim — é isso que te move",
-    "Dar o próximo passo em algo que você vem construindo",
-    "Compartilhar sua conquista com alguém de confiança",
-    "Agradecer por estar em movimento, mesmo nos dias difíceis"
-  ],
-
-  "positive|Serenidade|Corpo": [
-    "Honrar esse relaxamento sem culpa — descansar é produtivo",
-    "Continuar o que está te trazendo essa tranquilidade no corpo",
-    "Ficar presente nesse momento: respirar fundo, sentir o ambiente",
-    "Dormir cedo esta noite para prolongar essa serenidade",
-    "Fazer um alongamento suave para registrar essa leveza no corpo"
-  ],
-  "positive|Serenidade|Segurança": [
-    "Anotar o que está te dando essa sensação de chão firme",
-    "Planejar algo pequeno com calma, aproveitando esse momento estável",
-    "Compartilhar com alguém de confiança o quanto você se sente bem",
-    "Reforçar a rotina que está te ancorando: não abandone o que funciona",
-    "Usar essa serenidade para organizar algo que estava pendente"
-  ],
-  "positive|Serenidade|Conexões": [
-    "Compartilhar essa paz com alguém que te faz bem",
-    "Marcar um momento tranquilo com quem você ama",
-    "Estar presente de verdade na próxima conversa — sem celular, sem pressa",
-    "Escrever o que essa serenidade revela sobre o que te alimenta",
-    "Agradecer a alguém que contribuiu para esse momento de paz"
-  ],
-  "positive|Serenidade|Valor": [
-    "Reconhecer que essa paz é resultado de escolhas que você fez",
-    "Escrever o que mudou em você para chegar nesse estado",
-    "Celebrar a decisão de se cuidar — isso tem valor",
-    "Registrar esse momento para reler nos dias de agitação",
-    "Fazer algo só porque você gosta, sem justificar para ninguém"
-  ],
-  "positive|Serenidade|Crescimento": [
-    "Registrar o que te trouxe essa paz — pode ser um caminho",
-    "Planejar mais do que te faz sentir assim",
-    "Escrever o que essa serenidade te permite enxergar com clareza",
-    "Compartilhar sua percepção com alguém de confiança",
-    "Definir uma intenção para os próximos dias a partir desse estado"
-  ],
-
-  "positive|Confiança|Corpo": [
-    "Comemorar no corpo: dançar, se alongar, sair para caminhar com leveza",
-    "Continuar a rotina que está funcionando — ela contribuiu para isso",
-    "Agradecer ao seu corpo por estar presente e disponível",
-    "Dormir cedo para honrar a energia que você construiu",
-    "Preparar algo nutritivo — seu corpo merece esse cuidado"
-  ],
-  "positive|Confiança|Segurança": [
-    "Anotar o que está te dando essa sensação de solidez",
-    "Planejar o próximo passo com essa confiança como base",
-    "Compartilhar com alguém próximo o quanto você se sente firme",
-    "Reforçar a rotina que está te ancorando",
-    "Usar esse momento para tomar uma decisão que você vinha adiando"
-  ],
-  "positive|Confiança|Conexões": [
-    "Compartilhar essa confiança com alguém que torce por você",
-    "Oferecer apoio a alguém que está num momento mais difícil",
-    "Marcar um encontro para celebrar com quem você ama",
-    "Dizer em voz alta para alguém o quanto você se sente bem",
-    "Reconhecer quem contribuiu para você chegar aqui"
-  ],
-  "positive|Confiança|Valor": [
-    "Escrever de onde veio essa confiança — ela tem nome e história",
-    "Celebrar o limite que você colocou ou a decisão que tomou com segurança",
-    "Registrar essa conquista para reler nos dias de dúvida",
-    "Fazer algo desafiador agora, enquanto você está com essa energia",
-    "Compartilhar essa força com alguém que precisa de inspiração"
-  ],
-  "positive|Confiança|Crescimento": [
-    "Dar o próximo passo em algo que você vem adiando — agora é a hora",
-    "Escrever o que essa confiança te permite sonhar agora",
-    "Planejar mais do que te faz sentir assim — é isso que te move",
-    "Compartilhar sua conquista com alguém de confiança",
-    "Definir um objetivo ousado para os próximos 30 dias"
-  ],
-
-  "positive|Amor|Corpo": [
-    "Celebrar no corpo: abraçar alguém, dançar, se cuidar com carinho",
-    "Fazer algo nutritivo para você mesma — o amor começa aqui",
-    "Dormir cedo para honrar esse momento de plenitude",
-    "Caminhar sentindo leveza, prestando atenção no ambiente",
-    "Fazer um gesto de carinho consigo: banho, creme, descanso"
-  ],
-  "positive|Amor|Segurança": [
-    "Registrar o que essa relação te dá de estável e seguro",
-    "Planejar um momento tranquilo com essa pessoa",
-    "Compartilhar com ela o quanto você se sente bem ao lado dela",
-    "Reforçar o que está funcionando nessa relação",
-    "Usar esse sentimento como base para tomar uma decisão com calma"
-  ],
-  "positive|Amor|Conexões": [
-    "Dizer em voz alta para essa pessoa o quanto ela importa",
-    "Escrever o que essa conexão significa para você",
-    "Marcar um encontro com essa pessoa em breve",
-    "Estar presente de verdade na próxima conversa — sem celular, sem pressa",
-    "Mandar uma mensagem para quem te fez sentir amada hoje"
-  ],
-  "positive|Amor|Valor": [
-    "Reconhecer que ser amada começa por se amar — escreva 3 coisas boas de você",
-    "Celebrar o vínculo que você cultivou com cuidado",
-    "Registrar esse sentimento para reler quando vier a dúvida",
-    "Fazer algo só porque você gosta, sem justificar para ninguém",
-    "Compartilhar essa alegria com alguém que torce por você"
-  ],
-  "positive|Amor|Crescimento": [
-    "Escrever o que essa relação te ensina e te faz crescer",
-    "Planejar algo novo para vivenciar junto com essa pessoa",
-    "Agradecer por ter escolhido e sido escolhida — isso tem peso",
-    "Dar o próximo passo em algo que você vem construindo",
-    "Registrar o que você aprendeu sobre si mesma nessa relação"
-  ],
-
-  "positive|Surpresa|Corpo": [
-    "Celebrar no corpo essa surpresa boa: dançar, pular, sorrir alto",
-    "Sair para caminhar aproveitando essa energia positiva",
-    "Fazer algo nutritivo — o corpo merece participar da celebração",
-    "Dormir cedo para integrar essa experiência com calma",
-    "Respirar fundo e sentir essa leveza no peito"
-  ],
-  "positive|Surpresa|Segurança": [
-    "Anotar o que essa surpresa revelou sobre o que está funcionando",
-    "Planejar o próximo passo com calma, porque você tem chão firme",
-    "Compartilhar com alguém próximo essa novidade boa",
-    "Reforçar a rotina que está te ancorando: não abandone o que funciona",
-    "Usar esse momento para organizar algo que estava pendente"
-  ],
-  "positive|Surpresa|Conexões": [
-    "Compartilhar essa surpresa com alguém que vai se alegrar junto",
-    "Agradecer a quem proporcionou esse momento",
-    "Estar presente de verdade na próxima conversa — sem celular, sem pressa",
-    "Marcar um encontro para celebrar com quem você ama",
-    "Escrever para alguém o quanto essa surpresa significou"
-  ],
-  "positive|Surpresa|Valor": [
-    "Reconhecer que você merecia essa surpresa boa",
-    "Escrever o que essa novidade revelou sobre o que você construiu",
-    "Celebrar sem minimizar — isso é real e é seu",
-    "Registrar esse momento para reler quando vier a dúvida",
-    "Fazer algo só porque você gosta, em honra a esse momento"
-  ],
-  "positive|Surpresa|Crescimento": [
-    "Registrar o que te trouxe essa surpresa positiva — pode se repetir",
-    "Planejar mais do que te faz sentir assim — é isso que te move",
-    "Dar o próximo passo em algo que você vem construindo",
-    "Agradecer por estar aberta ao inesperado — isso é uma força",
-    "Escrever o que essa surpresa revelou sobre você"
-  ],
 
   // ══════════════════════════════════════════════════
-  //  MODO DESAFIO
+  //  MODO DESAFIADOR — ações do Mapa de Ações (PDF)
   // ══════════════════════════════════════════════════
 
+  // ── TRISTEZA ──
   "challenging|Tristeza|Corpo": [
-    "Beber água, comer algo nutritivo e se deitar se precisar",
-    "Sair para uma caminhada curta — o movimento alivia o peso emocional",
-    "Tirar 10 minutos sem tela, só sentindo o ambiente ao redor",
-    "Fazer uma respiração profunda: inspirar 4s, segurar 4s, soltar 6s",
-    "Dormir mais cedo esta noite — o corpo carrega a tristeza"
+    "Faça uma caminhada curta, mesmo sem vontade.",
+    "Tome um banho demorado e confortável.",
+    "Prepare uma refeição simples e nutritiva para você.",
+    "Alongue o corpo por alguns minutos, prestando atenção na respiração.",
+    "Permita-se descansar por 20 minutos sem celular ou distrações.",
   ],
   "challenging|Tristeza|Segurança": [
-    "Fazer uma lista do que ainda está estável na sua vida agora",
-    "Criar uma pequena rotina para amanhã — previsibilidade traz chão",
-    "Conversar com alguém de confiança sobre o que você está sentindo",
-    "Escrever o que você pode controlar nesse momento",
-    "Fazer algo pequeno e concreto que devolva sensação de controle"
+    "Organize apenas as próximas horas do seu dia.",
+    "Arrume um pequeno espaço da casa que está te incomodando.",
+    "Faça uma lista de três coisas que continuam estáveis na sua vida.",
+    "Converse com alguém que costuma trazer sensação de acolhimento.",
+    "Adie decisões importantes até se sentir emocionalmente mais regulada.",
   ],
   "challenging|Tristeza|Conexões": [
-    "Mandar uma mensagem para alguém que você sente saudade",
-    "Falar como você está se sentindo para uma pessoa de confiança",
-    "Marcar um café ou uma conversa com alguém que te faz bem",
-    "Escrever o que você precisa de uma relação que não está recebendo",
-    "Chorar se precisar — e depois chamar alguém para estar perto"
+    "Envie uma mensagem para alguém que te faz bem.",
+    "Aceite um convite ou procure companhia por alguns minutos.",
+    "Compartilhe com alguém como você realmente está se sentindo.",
+    "Faça um gesto gentil para uma pessoa importante para você.",
+    "Permita-se receber ajuda sem sentir que precisa retribuir imediatamente.",
   ],
   "challenging|Tristeza|Valor": [
-    "Escrever uma carta para si mesma com gentileza, como faria para uma amiga",
-    "Identificar uma coisa pequena que você ainda admira em você",
-    "Permitir-se sentir a tristeza sem se julgar por ela",
-    "Anotar o que essa tristeza está revelando sobre o que importa para você",
-    "Escrever 3 coisas que você fez bem esta semana, por menores que sejam"
+    "Reconheça uma qualidade sua que continua presente mesmo neste momento difícil.",
+    "Fale consigo mesma da forma como falaria com uma amiga querida.",
+    "Lembre-se de uma situação difícil que você conseguiu atravessar.",
+    "Faça algo que normalmente você faria por alguém, mas desta vez por você.",
+    "Relembre uma conquista sua que merece ser reconhecida.",
   ],
   "challenging|Tristeza|Crescimento": [
-    "Escrever o que essa tristeza está te ensinando sobre você",
-    "Perguntar a si mesma: o que eu quero diferente daqui pra frente?",
-    "Resgatar algo que te dá sentido, mesmo que pequeno",
-    "Ler, ouvir ou assistir algo que te inspire sem pressionar",
-    "Escrever uma intenção gentil para os próximos dias"
+    "Retome por 10 minutos algo que dá sentido à sua vida.",
+    "Dê um pequeno passo em direção a algo importante para você.",
+    "Pergunte-se: 'O que essa experiência está me mostrando sobre minhas necessidades?'",
+    "Experimente uma atividade diferente da sua rotina habitual.",
+    "Escolha uma ação que aproxime você da vida que deseja construir.",
   ],
 
+  // ── MEDO ──
   "challenging|Medo|Corpo": [
-    "Fazer respiração abdominal por 3 minutos para acalmar o sistema nervoso",
-    "Sair para caminhar — o movimento dissolve o medo acumulado no corpo",
-    "Beber água e comer algo — o corpo assustado precisa de cuidado básico",
-    "Alongar o corpo por 5 minutos, prestando atenção em cada parte",
-    "Tirar 10 minutos de descanso sem celular, sem fazer nada"
+    "Coloque as mãos no peito e respire fundo três vezes, sentindo o próprio calor.",
+    "Caminhe por 10 minutos para reduzir a tensão física.",
+    "Alongue ombros, pescoço e mandíbula.",
+    "Tome água e faça uma pausa antes de continuar.",
+    "Afaste-se por alguns minutos dos estímulos que estão aumentando sua preocupação.",
   ],
   "challenging|Medo|Segurança": [
-    "Fazer uma lista: o que posso controlar e o que não posso",
-    "Listar 3 coisas que ainda estão estáveis na sua vida agora",
-    "Criar uma pequena rotina para amanhã — previsibilidade traz segurança",
-    "Conversar com alguém de confiança sobre o que você está temendo",
-    "Escrever o pior cenário e o mais provável — raramente são iguais"
+    "Identifique o que está sob seu controle hoje.",
+    "Organize os recursos que você já tem disponíveis.",
+    "Procure informações confiáveis sobre a situação.",
+    "Converse com alguém que possa oferecer orientação prática.",
+    "Crie um plano simples para o próximo passo.",
   ],
   "challenging|Medo|Conexões": [
-    "Falar com alguém de confiança sobre o que está te assustando",
-    "Pedir apoio — você não precisa enfrentar isso sozinha",
-    "Identificar quem na sua vida te faz sentir mais segura",
-    "Marcar um encontro para não ficar sozinha com esse sentimento",
-    "Escrever o que você precisaria ouvir agora de alguém que te ama"
+    "Conte a alguém de confiança o que está te preocupando.",
+    "Peça ajuda em vez de tentar resolver tudo sozinha.",
+    "Passe algum tempo com pessoas que transmitem calma e segurança.",
+    "Aceite apoio mesmo que ainda não saiba exatamente do que precisa.",
+    "Lembre-se de quem costuma estar ao seu lado nos momentos difíceis.",
   ],
   "challenging|Medo|Valor": [
-    "Lembrar de outras vezes que você teve medo e atravessou — você sabe fazer isso",
-    "Escrever 3 qualidades suas que te ajudam a lidar com o desconhecido",
-    "Quando a autocrítica vier, perguntar: eu falaria isso com uma amiga?",
-    "Identificar um limite que precisa ser dito para se sentir mais segura",
-    "Reconhecer que sentir medo não significa fraqueza — é humano"
+    "Recorde uma situação em que você foi mais forte do que imaginava.",
+    "Liste três recursos pessoais que já te ajudaram antes.",
+    "Reconheça que sentir medo não significa ser incapaz.",
+    "Respeite seus limites sem se julgar por isso.",
+    "Valorize sua coragem de continuar mesmo sentindo insegurança.",
   ],
   "challenging|Medo|Crescimento": [
-    "Escrever o que o medo está revelando sobre o que importa para você",
-    "Perguntar a si mesma: o que eu faria se soubesse que ia dar certo?",
-    "Dar um passo pequeno em direção ao que te assusta — só um",
-    "Ler sobre alguém que superou um medo parecido com o seu",
-    "Escrever o que você quer estar vivendo em 6 meses, apesar do medo"
+    "Faça apenas a primeira etapa do que está evitando.",
+    "Experimente algo que gere um desconforto pequeno e administrável.",
+    "Lembre-se do motivo pelo qual essa situação importa para você.",
+    "Busque aprender algo que aumente sua confiança para lidar com o desafio.",
+    "Escolha agir antes de sentir certeza absoluta.",
   ],
 
-  "challenging|Nojo|Corpo": [
-    "Afastar fisicamente do que gerou esse sentimento, se possível",
-    "Sair para caminhar e renovar o ar — o corpo precisa de espaço",
-    "Fazer algo que devolva sensação de limpeza e presença",
-    "Beber água e respirar fundo — recentrar no corpo",
-    "Tirar 10 minutos longe da situação, sem pensar nela"
-  ],
-  "challenging|Nojo|Segurança": [
-    "Identificar o que essa situação ameaçou em você e nomear isso",
-    "Criar distância da situação ou pessoa que gerou esse sentimento",
-    "Fazer uma lista do que você pode fazer para se proteger",
-    "Reforçar um limite que ficou nebuloso nessa situação",
-    "Conversar com alguém de confiança sobre o que aconteceu"
-  ],
-  "challenging|Nojo|Conexões": [
-    "Identificar alguém que está drenando sua energia e diminuir o contato por um tempo",
-    "Escrever o que você precisa de uma relação que não está recebendo",
-    "Conversar com alguém de confiança sobre o que está te incomodando",
-    "Afastar-se da situação que gerou esse sentimento — você tem direito",
-    "Falar como você está se sentindo para alguém que te respeita"
-  ],
-  "challenging|Nojo|Valor": [
-    "Escrever o que foi violado em você — nomear é o primeiro passo",
-    "Identificar um limite que precisa ser dito em voz alta",
-    "Afastar-se da situação ou pessoa que gerou esse sentimento",
-    "Perguntar a si mesma: o que eu realmente valorizo e não estou honrando?",
-    "Dizer não para algo que você não quer fazer"
-  ],
-  "challenging|Nojo|Crescimento": [
-    "Escrever o que essa reação de nojo está revelando sobre seus valores",
-    "Identificar o que você não quer mais tolerar a partir de agora",
-    "Definir um limite claro para situações parecidas no futuro",
-    "Perguntar a si mesma: que tipo de ambiente eu quero cultivar?",
-    "Escrever quem você quer ser e o que isso implica em termos de escolhas"
-  ],
-
-  "challenging|Raiva|Corpo": [
-    "Sair para caminhar rápido ou correr — o corpo precisa mover essa energia",
-    "Fazer algo físico: alongar, dançar, sacudir o corpo",
-    "Respirar fundo e soltar com força pela boca — repita 5 vezes",
-    "Escrever tudo que você está sentindo sem filtro — e depois guardar",
-    "Tirar 20 minutos antes de agir ou responder qualquer coisa"
-  ],
-  "challenging|Raiva|Segurança": [
-    "Escrever o que está te gerando insegurança — tirar da cabeça já alivia",
-    "Fazer uma lista: o que posso controlar e o que não posso",
-    "Criar uma pequena rotina para amanhã — previsibilidade traz segurança",
-    "Listar 3 coisas que ainda estão estáveis na sua vida agora",
-    "Dar um pequeno passo concreto para recuperar o controle sobre a situação"
-  ],
-  "challenging|Raiva|Conexões": [
-    "Falar com alguém de confiança sobre o que aconteceu — sem guardar",
-    "Escrever o que você precisaria ouvir dessa pessoa ou situação",
-    "Identificar se a raiva é com alguém específico e o que você precisa dela",
-    "Evitar responder no calor do momento — esperar passar a intensidade",
-    "Pedir apoio de alguém que vai te ouvir sem julgamento"
-  ],
-  "challenging|Raiva|Valor": [
-    "Escrever o que foi desrespeitado — a raiva tem uma mensagem importante",
-    "Identificar um limite que precisa ser estabelecido ou reforçado",
-    "Quando a autocrítica vier, perguntar: eu falaria isso com uma amiga?",
-    "Fazer algo só porque você gosta, sem precisar justificar para ninguém",
-    "Dizer não para algo que você não quer fazer — agora é o momento"
-  ],
-  "challenging|Raiva|Crescimento": [
-    "Escrever o que essa raiva está revelando sobre o que importa para você",
-    "Perguntar a si mesma: o que eu quero diferente depois disso?",
-    "Identificar um padrão que se repete e que precisa mudar",
-    "Canalizar essa energia em algo construtivo — um projeto, uma decisão",
-    "Escrever o que você vai fazer diferente na próxima situação parecida"
-  ],
-
-  "challenging|Surpresa|Corpo": [
-    "Respirar fundo e dar ao corpo tempo para processar o inesperado",
-    "Sair para caminhar e deixar a cabeça organizar as ideias",
-    "Beber água e comer algo — o corpo precisa de estabilidade agora",
-    "Tirar 10 minutos sem tela para sentir o que está no corpo",
-    "Dormir antes de tomar qualquer decisão sobre o que aconteceu"
-  ],
-  "challenging|Surpresa|Segurança": [
-    "Fazer uma lista: o que posso controlar e o que não posso",
-    "Listar 3 coisas que ainda estão estáveis na sua vida agora",
-    "Criar uma pequena rotina para amanhã — previsibilidade traz segurança",
-    "Conversar com alguém de confiança sobre essa surpresa",
-    "Escrever o que mudou e o que permanece igual — isso ancora"
-  ],
-  "challenging|Surpresa|Conexões": [
-    "Falar com alguém de confiança sobre o que aconteceu",
-    "Não processar sozinha — buscar apoio agora",
-    "Escrever o que você precisaria ouvir de alguém que te ama",
-    "Identificar quem na sua vida te ajuda a pensar com clareza",
-    "Marcar um encontro para não ficar sozinha com esse sentimento"
-  ],
-  "challenging|Surpresa|Valor": [
-    "Lembrar de outras situações inesperadas que você atravessou bem",
-    "Escrever 3 qualidades suas que te ajudam a lidar com o imprevisto",
-    "Permitir-se sentir a surpresa sem precisar ter resposta imediata",
-    "Reconhecer que não ter controle sobre tudo não diminui quem você é",
-    "Escrever o que esse momento está revelando sobre sua resiliência"
-  ],
-  "challenging|Surpresa|Crescimento": [
-    "Escrever o que essa surpresa está te ensinando",
-    "Perguntar a si mesma: o que essa situação está abrindo para mim?",
-    "Identificar uma oportunidade que pode existir dentro desse imprevisto",
-    "Dar um passo pequeno em direção ao que surgiu de novo",
-    "Escrever o que você quer que seja diferente a partir daqui"
-  ],
-
+  // ── ANSIEDADE ──
   "challenging|Ansiedade|Corpo": [
-    "Fazer respiração abdominal por 3 minutos para acalmar o sistema nervoso",
-    "Sair para caminhar — o movimento dissolve a ansiedade acumulada",
-    "Beber água agora e comer algo com calma, sem tela",
-    "Tirar 10 minutos de descanso sem celular, sem fazer nada",
-    "Alongar o corpo por 5 minutos, prestando atenção em cada parte"
+    "Caminhe por 10 minutos prestando atenção ao ambiente ao seu redor.",
+    "Faça 10 respirações lentas, soltando o ar mais devagar do que inspira.",
+    "Alongue o corpo por alguns minutos para liberar a tensão acumulada.",
+    "Faça uma pausa das telas por 15 minutos.",
+    "Coma ou beba algo com calma, prestando atenção ao que está fazendo.",
   ],
   "challenging|Ansiedade|Segurança": [
-    "Escrever o que está te gerando ansiedade — tirar da cabeça já alivia",
-    "Fazer uma lista: o que posso controlar e o que não posso",
-    "Listar 3 coisas que ainda estão estáveis na sua vida agora",
-    "Criar uma pequena rotina para amanhã — previsibilidade traz segurança",
-    "Respirar: 4s inspirando, 4s segurando, 6s soltando — repita 5x"
+    "Escolha apenas uma prioridade para resolver agora.",
+    "Faça uma lista do que depende e do que não depende de você.",
+    "Organize apenas as próximas duas horas do seu dia.",
+    "Termine uma tarefa pequena que está aberta na sua mente.",
+    "Reduza temporariamente o excesso de informações que está consumindo.",
   ],
   "challenging|Ansiedade|Conexões": [
-    "Falar com alguém de confiança sobre o que está te preocupando",
-    "Não processar sozinha — buscar apoio agora",
-    "Escrever o que você precisaria ouvir de alguém que te ama",
-    "Marcar um encontro para não ficar sozinha com esse sentimento",
-    "Identificar quem na sua vida te faz sentir mais calma"
+    "Converse com alguém que costuma trazer clareza, não mais preocupação.",
+    "Compartilhe sua dúvida com uma pessoa de confiança.",
+    "Peça ajuda para organizar um problema que parece grande demais.",
+    "Passe alguns minutos com alguém que te faz sentir segura.",
+    "Permita-se receber apoio sem precisar ter todas as respostas.",
   ],
   "challenging|Ansiedade|Valor": [
-    "Quando a autocrítica vier, perguntar: eu falaria isso com uma amiga?",
-    "Escrever 3 coisas que você está fazendo bem, mesmo com ansiedade",
-    "Reconhecer que sentir ansiedade não significa que vai dar errado",
-    "Fazer algo só porque você gosta, sem precisar produzir nada",
-    "Lembrar de outras vezes que você ficou ansiosa e passou"
+    "Reconheça algo que você já está fazendo bem hoje.",
+    "Lembre-se de uma situação em que conseguiu lidar com a incerteza.",
+    "Fale consigo mesma com mais gentileza do que cobrança.",
+    "Faça uma pausa da comparação com outras pessoas.",
+    "Reconheça que sentir ansiedade não significa que algo ruim vai acontecer.",
   ],
   "challenging|Ansiedade|Crescimento": [
-    "Escrever o que a ansiedade está revelando sobre o que importa para você",
-    "Perguntar a si mesma: que passo pequeno posso dar hoje?",
-    "Quebrar uma tarefa que parece grande em partes menores",
-    "Focar só no que pode ser feito hoje, não em tudo de uma vez",
-    "Escrever o que você quer estar sentindo em 30 dias"
+    "Divida uma tarefa grande em partes menores.",
+    "Faça apenas os primeiros 10 minutos daquilo que está adiando.",
+    "Dê um passo pequeno antes de se sentir totalmente pronta.",
+    "Escolha uma ação que aproxime você dos seus objetivos.",
+    "Troque a pergunta 'E se der errado?' por 'Qual é o próximo passo possível?'",
   ],
 
-  "challenging|Inveja|Corpo": [
-    "Sair para caminhar e deixar o corpo processar o que a mente está sentindo",
-    "Fazer algo físico que te devolva energia e presença",
-    "Tirar 10 minutos sem tela e sem se comparar com ninguém",
-    "Beber água e respirar — recentrar no seu próprio corpo",
-    "Fazer algo nutritivo para você mesma, com cuidado"
+  // ── RAIVA ──
+  "challenging|Raiva|Corpo": [
+    "Faça uma caminhada rápida para descarregar a tensão acumulada.",
+    "Afaste-se da situação por alguns minutos antes de responder.",
+    "Alongue braços, ombros e mandíbula, liberando a tensão física.",
+    "Faça respirações profundas até perceber seu corpo desacelerar.",
+    "Movimente o corpo de forma intensa por alguns minutos (dançar, subir escadas ou exercício rápido).",
   ],
-  "challenging|Inveja|Segurança": [
-    "Escrever o que na sua vida hoje está funcionando e te dando base",
-    "Identificar o que você tem que a inveja está te impedindo de ver",
-    "Criar uma pequena rotina que te lembre do seu próprio caminho",
-    "Fazer uma lista do que já construiu — por menor que pareça",
-    "Conversar com alguém de confiança sobre o que você está sentindo"
+  "challenging|Raiva|Segurança": [
+    "Organize os fatos antes de tirar conclusões.",
+    "Identifique o que realmente aconteceu e o que você está imaginando.",
+    "Adie conversas importantes até a intensidade da emoção diminuir.",
+    "Foque no que está sob seu controle neste momento.",
+    "Escolha uma ação concreta que ajude a resolver parte do problema.",
   ],
-  "challenging|Inveja|Conexões": [
-    "Identificar se essa inveja vem de uma relação específica e o que falta nela",
-    "Conversar com alguém de confiança sobre o que você está sentindo",
-    "Afastar-se temporariamente de quem alimenta essa comparação",
-    "Buscar conexão com alguém que te inspira sem te diminuir",
-    "Escrever o que você precisa de uma relação que não está recebendo"
+  "challenging|Raiva|Conexões": [
+    "Converse com alguém que saiba ouvir sem alimentar o conflito.",
+    "Explique o que aconteceu para uma pessoa de confiança.",
+    "Peça uma opinião equilibrada sobre a situação.",
+    "Expresse como você se sente sem atacar ou acusar.",
+    "Procure apoio antes de tomar uma decisão impulsiva.",
   ],
-  "challenging|Inveja|Valor": [
-    "Escrever o que a inveja está revelando sobre o que você quer — sem julgamento",
-    "Diminuir o tempo em comparações — redes sociais, conversas, pensamentos",
-    "Escrever 3 coisas que você admira em si mesma hoje",
-    "Identificar um desejo seu que você ainda não se deu permissão de ter",
-    "Anotar uma conquista sua que você nunca parou para reconhecer"
+  "challenging|Raiva|Valor": [
+    "Identifique qual necessidade sua não foi respeitada.",
+    "Pergunte-se: 'O que é importante para mim nesta situação?'",
+    "Reconheça que sua opinião também merece espaço.",
+    "Permita-se discordar sem se sentir culpada.",
+    "Lembre que proteger seus limites não faz de você uma pessoa egoísta.",
   ],
-  "challenging|Inveja|Crescimento": [
-    "Perguntar a si mesma: o que eu faria se não tivesse medo de querer isso?",
-    "Escrever uma coisa pequena que você pode fazer hoje em direção ao que sonha",
-    "Resgatar um projeto ou sonho que você deixou de lado",
-    "Definir uma meta pequena e alcançável para essa semana",
-    "Diminuir o tempo olhando para o que os outros têm — focar no seu caminho"
+  "challenging|Raiva|Crescimento": [
+    "Transforme essa energia em uma ação que gere mudança.",
+    "Identifique um padrão que você não quer repetir.",
+    "Pratique dizer o que pensa de forma clara e respeitosa.",
+    "Escolha uma atitude que fortaleça seus limites no futuro.",
+    "Pergunte-se: 'O que essa raiva está tentando me ensinar?'",
   ],
 
+  // ── VERGONHA ──
   "challenging|Vergonha|Corpo": [
-    "Sair do ambiente onde a vergonha foi ativada — criar espaço físico",
-    "Respirar fundo e lembrar ao corpo que você está segura agora",
-    "Fazer algo que devolva sensação de cuidado: banho, chá, descanso",
-    "Caminhar e deixar o corpo se mover para processar a emoção",
-    "Tirar 10 minutos sem tela e sem se julgar"
+    "Afaste-se por alguns minutos do ambiente que ativou essa emoção.",
+    "Faça algumas respirações lentas e profundas para reduzir a tensão.",
+    "Relaxe conscientemente os ombros, o rosto e a mandíbula.",
+    "Caminhe por alguns minutos para sair do estado de paralisação.",
+    "Faça um gesto simples de cuidado consigo mesma, como um banho ou um chá.",
   ],
   "challenging|Vergonha|Segurança": [
-    "Identificar se o que gerou vergonha foi real ou uma interpretação",
-    "Criar distância da situação antes de tomar qualquer atitude",
-    "Fazer uma lista do que ainda está estável e bom na sua vida",
-    "Conversar com alguém de confiança sobre o que aconteceu",
-    "Lembrar de outras vezes que você sentiu vergonha e passou"
+    "Pergunte-se: 'O que aconteceu de fato e o que estou imaginando que os outros pensam?'",
+    "Adie decisões importantes até a intensidade emocional diminuir.",
+    "Permita-se não ter respostas agora — nem toda situação precisa ser resolvida hoje.",
+    "Identifique algo que continua estável e seguro na sua vida hoje.",
+    "Dê a si mesma permissão para não resolver tudo imediatamente.",
   ],
   "challenging|Vergonha|Conexões": [
-    "Falar com alguém de confiança sobre o que você está sentindo",
-    "Identificar se essa vergonha vem de um julgamento externo real ou imaginado",
-    "Escrever o que você precisaria ouvir agora e por que é difícil pedir",
-    "Afastar-se por um tempo de quem alimenta essa sensação em você",
-    "Lembrar que todo mundo erra — você não está sozinha nisso"
+    "Compartilhe o que aconteceu com alguém em quem você confia.",
+    "Permita que uma pessoa próxima ofereça apoio sem se explicar demais.",
+    "Passe algum tempo com pessoas que fazem você se sentir aceita.",
+    "Lembre-se de que todos erram, falham e passam por momentos difíceis.",
+    "Peça ajuda em vez de tentar carregar tudo sozinha.",
   ],
   "challenging|Vergonha|Valor": [
-    "Escrever uma carta para si mesma com gentileza, como faria para uma amiga",
-    "Quando a autocrítica vier, perguntar: eu falaria isso com uma amiga?",
-    "Identificar uma coisa pequena que você ainda admira em você",
-    "Permitir-se sentir sem se punir — vergonha não define quem você é",
-    "Anotar o que você gostaria de ter feito diferente — e o que aprendeu"
+    "Fale consigo mesma como falaria com uma amiga querida na mesma situação.",
+    "Reconheça uma qualidade sua que continua existindo apesar deste momento.",
+    "Lembre-se de algo que você admira em si mesma.",
+    "Diferencie quem você é do que aconteceu.",
+    "Permita-se ser humana, sem exigir perfeição.",
   ],
   "challenging|Vergonha|Crescimento": [
-    "Escrever o que esse momento está te ensinando sobre você",
-    "Identificar o que você quer fazer diferente na próxima vez",
-    "Transformar o erro em aprendizado: o que eu sei agora que não sabia antes?",
-    "Dar um passo de reparação se necessário — e depois seguir em frente",
-    "Escrever quem você quer ser, independente do que aconteceu"
+    "Pergunte-se: 'O que posso aprender com isso?'",
+    "Identifique uma atitude que faria diferente da próxima vez.",
+    "Faça uma pequena reparação se ela for necessária.",
+    "Escolha seguir em frente em vez de permanecer se punindo.",
+    "Use essa experiência para desenvolver mais autocompaixão consigo mesma.",
   ],
 
-  "challenging|Tédio|Corpo": [
-    "Sair para caminhar, mesmo que por 10 minutos — o movimento cria energia",
-    "Tirar 10 minutos de descanso sem celular, sem fazer nada de verdade",
-    "Beber água e se alimentar bem — o tédio às vezes é sinal de corpo exausto",
-    "Dormir mais cedo esta noite — o corpo pode estar pedindo recuperação",
-    "Alongar o corpo por 5 minutos, prestando atenção em cada parte"
+  // ── CULPA ──
+  "challenging|Culpa|Corpo": [
+    "Faça algumas respirações profundas antes de tentar resolver a situação.",
+    "Dê uma caminhada curta para diminuir a intensidade emocional.",
+    "Relaxe os ombros e a mandíbula, percebendo a tensão que está carregando.",
+    "Faça uma pausa para se alimentar ou se hidratar antes de tomar decisões.",
+    "Faça uma pausa e coloque os pés no chão, respirando até sentir seu corpo se estabilizar.",
   ],
-  "challenging|Tédio|Segurança": [
-    "Criar uma pequena rotina nova para os próximos dias",
-    "Fazer uma lista de coisas pequenas que você pode fazer hoje",
-    "Organizar um canto da sua casa ou algo que estava pendente",
-    "Planejar algo diferente para a semana — mesmo que pequeno",
-    "Conversar com alguém sobre como você está se sentindo"
+  "challenging|Culpa|Segurança": [
+    "Separe os fatos das interpretações sobre o que aconteceu.",
+    "Pergunte-se: 'O que realmente está sob minha responsabilidade?'",
+    "Evite tomar decisões impulsivas apenas para aliviar o desconforto.",
+    "Organize os próximos passos antes de agir.",
+    "Converse com alguém equilibrado para ganhar perspectiva sobre a situação.",
   ],
-  "challenging|Tédio|Conexões": [
-    "Mandar uma mensagem para alguém que você não fala há tempo",
-    "Propor um encontro ou atividade com alguém que te faz bem",
-    "Fazer algo em grupo: uma aula, um evento, um encontro",
-    "Escrever para alguém o quanto você sente falta dela",
-    "Buscar uma nova conexão — um grupo, uma comunidade, um evento"
+  "challenging|Culpa|Conexões": [
+    "Converse honestamente com a pessoa envolvida, se for possível.",
+    "Escute o impacto da situação sem entrar imediatamente em defesa.",
+    "Peça desculpas de forma sincera, sem justificar excessivamente.",
+    "Busque reconstruir a confiança através de ações consistentes.",
+    "Permita-se receber compreensão quando ela for oferecida.",
   ],
-  "challenging|Tédio|Valor": [
-    "Escrever o que te dá prazer e que você deixou de fazer",
-    "Fazer algo só porque você gosta, sem precisar ser produtiva",
-    "Retomar um hobby ou atividade que você abandonou",
-    "Escrever 3 coisas que você admira em si mesma hoje",
-    "Reconhecer que o tédio pode ser sinal de que você precisa de mais"
+  "challenging|Culpa|Valor": [
+    "Reconheça que cometer erros faz parte da experiência humana.",
+    "Diferencie seu comportamento do seu valor como pessoa.",
+    "Lembre-se de outras situações em que você conseguiu reparar um erro.",
+    "Reconheça sua intenção de agir melhor daqui para frente.",
+    "Trate-se com a mesma humanidade que ofereceria a alguém que ama.",
   ],
-  "challenging|Tédio|Crescimento": [
-    "Escrever uma coisa pequena que você pode fazer hoje em direção ao que sonha",
-    "Aprender algo novo por 10 minutos — um vídeo, um podcast, uma leitura",
-    "Resgatar um projeto ou sonho que você deixou de lado",
-    "Perguntar a si mesma: o que eu faria se não tivesse medo?",
-    "Escrever quem você quer ser daqui a 1 ano — com detalhes"
+  "challenging|Culpa|Crescimento": [
+    "Identifique o que essa situação está te ensinando.",
+    "Escolha uma ação concreta para reparar o que for possível.",
+    "Defina o que fará diferente em uma situação parecida no futuro.",
+    "Transforme o erro em uma oportunidade de amadurecimento.",
+    "Depois de aprender e reparar, permita-se seguir em frente.",
+  ],
+
+  // ── INVEJA ──
+  "challenging|Inveja|Corpo": [
+    "Afaste-se por alguns minutos das redes sociais ou das comparações.",
+    "Faça uma caminhada prestando atenção no ambiente ao seu redor.",
+    "Faça uma atividade física que lembre seu corpo da própria capacidade.",
+    "Reserve alguns minutos para cuidar de si mesma de forma intencional.",
+    "Volte sua atenção para o que está acontecendo na sua vida hoje.",
+  ],
+  "challenging|Inveja|Segurança": [
+    "Faça uma lista de três coisas que já estão funcionando na sua vida.",
+    "Reconheça uma conquista sua que costuma passar despercebida.",
+    "Organize uma área da sua vida que você pode melhorar agora.",
+    "Lembre-se de que cada pessoa está em um momento diferente da jornada.",
+    "Foque no que está sob sua influência neste momento.",
+  ],
+  "challenging|Inveja|Conexões": [
+    "Aproxime-se de pessoas que inspiram sem fazer você se sentir menor.",
+    "Converse com alguém sobre seus objetivos em vez de esconder seus desejos.",
+    "Demonstre admiração por alguém sem se comparar.",
+    "Procure aprender com quem já conquistou o que você deseja.",
+    "Fortaleça relações que incentivam seu crescimento.",
+  ],
+  "challenging|Inveja|Valor": [
+    "Pergunte-se: 'O que exatamente eu admiro nessa pessoa?'",
+    "Identifique qual desejo seu está sendo revelado por essa emoção.",
+    "Reconheça qualidades suas que merecem mais atenção.",
+    "Diferencie admiração de comparação.",
+    "Permita-se desejar algo sem se julgar por isso.",
+  ],
+  "challenging|Inveja|Crescimento": [
+    "Dê um pequeno passo em direção ao que você deseja construir.",
+    "Escolha uma habilidade que gostaria de desenvolver e comece hoje.",
+    "Transforme a comparação em inspiração para agir.",
+    "Defina uma meta simples relacionada ao que você admira.",
+    "Pergunte-se: 'O que posso fazer esta semana para me aproximar disso?'",
+  ],
+
+  // ── NOJO ──
+  "challenging|Nojo|Corpo": [
+    "Afaste-se fisicamente da situação por alguns minutos, se possível.",
+    "Tome um banho ou lave o rosto para criar uma sensação de renovação.",
+    "Faça uma caminhada curta para recuperar espaço mental.",
+    "Respire profundamente e solte a tensão acumulada no corpo.",
+    "Vá para um ambiente que transmita mais conforto e bem-estar.",
+  ],
+  "challenging|Nojo|Segurança": [
+    "Identifique claramente o que está te causando desconforto.",
+    "Pergunte-se se essa situação merece sua permanência ou afastamento.",
+    "Reduza a exposição ao que está drenando sua energia.",
+    "Organize um plano simples para se proteger dessa situação.",
+    "Confirme quais limites precisam ser fortalecidos daqui para frente.",
+  ],
+  "challenging|Nojo|Conexões": [
+    "Converse com alguém de confiança sobre o que está te incomodando.",
+    "Aproxime-se de pessoas que fazem você se sentir respeitada.",
+    "Afaste-se temporariamente de relações que aumentam seu mal-estar.",
+    "Observe quais relações fazem você se sentir mais leve após o contato.",
+    "Escolha passar mais tempo com pessoas alinhadas aos seus valores.",
+  ],
+  "challenging|Nojo|Valor": [
+    "Pergunte-se: 'O que essa situação está mostrando sobre o que considero importante?'",
+    "Identifique qual valor seu parece ter sido desrespeitado.",
+    "Reconheça que você tem o direito de não aceitar tudo.",
+    "Reforce um limite que estava sendo ignorado.",
+    "Honre suas convicções mesmo que outras pessoas pensem diferente.",
+  ],
+  "challenging|Nojo|Crescimento": [
+    "Reflita sobre o que você não quer mais tolerar na sua vida.",
+    "Faça uma mudança prática que aumente seu bem-estar.",
+    "Escolha um ambiente mais saudável para investir sua energia.",
+    "Use essa experiência para definir padrões mais claros para o futuro.",
+    "Pergunte-se: 'Do que preciso me aproximar para viver de forma mais alinhada comigo?'",
+  ],
+
+  // ── TÉDIO ──
+  "challenging|Tédio (sem vontade de nada, tudo parece igual)|Corpo": [
+    "Faça uma caminhada por um caminho diferente do habitual.",
+    "Experimente uma atividade física que normalmente não faz.",
+    "Mude de ambiente por alguns minutos e observe algo novo ao seu redor.",
+    "Faça um alongamento completo prestando atenção nas sensações do corpo.",
+    "Coloque uma música diferente e movimente-se livremente por alguns minutos.",
+  ],
+  "challenging|Tédio (sem vontade de nada, tudo parece igual)|Segurança": [
+    "Organize uma pequena mudança na sua rotina da semana.",
+    "Planeje uma atividade diferente para os próximos dias.",
+    "Escolha uma tarefa parada e conclua apenas uma parte dela.",
+    "Faça uma lista de coisas que você gostaria de experimentar no próximo mês.",
+    "Crie espaço na agenda para algo novo, mesmo que simples.",
+  ],
+  "challenging|Tédio (sem vontade de nada, tudo parece igual)|Conexões": [
+    "Convide alguém para fazer algo diferente com você.",
+    "Retome contato com uma pessoa que você gosta e não fala há algum tempo.",
+    "Participe de um grupo, evento ou atividade coletiva que desperte curiosidade.",
+    "Tenha uma conversa sobre um assunto diferente do habitual.",
+    "Conheça melhor alguém fazendo perguntas que normalmente não faria.",
+  ],
+  "challenging|Tédio (sem vontade de nada, tudo parece igual)|Valor": [
+    "Relembre atividades que costumavam trazer prazer ou entusiasmo.",
+    "Pergunte-se: 'O que estou sentindo falta na minha vida hoje?'",
+    "Identifique algo que você gostaria de voltar a priorizar.",
+    "Reconheça interesses seus que ficaram esquecidos pela rotina.",
+    "Pergunte-se: 'O que eu faria hoje se não precisasse justificar para ninguém?'",
+  ],
+  "challenging|Tédio (sem vontade de nada, tudo parece igual)|Crescimento": [
+    "Aprenda algo novo por 10 minutos hoje.",
+    "Comece um projeto pequeno que desperte sua curiosidade.",
+    "Experimente uma atividade que sempre teve vontade de conhecer.",
+    "Escolha um desafio simples que tire você do automático.",
+    "Pergunte-se: 'O que eu gostaria de explorar mais nesta fase da minha vida?'",
+  ],
+
+  // ── SURPRESA ──
+  "challenging|Surpresa|Corpo": [
+    "Faça três respirações lentas antes de tomar qualquer decisão.",
+    "Pare por alguns minutos e observe como seu corpo está reagindo.",
+    "Caminhe um pouco para organizar as ideias.",
+    "Beba água e desacelere o ritmo antes de continuar.",
+    "Alongue-se para reduzir a tensão gerada pela mudança inesperada.",
+  ],
+  "challenging|Surpresa|Segurança": [
+    "Reúna mais informações antes de tirar conclusões.",
+    "Pergunte-se: 'O que eu sei de fato até agora?'",
+    "Evite tomar decisões importantes imediatamente.",
+    "Identifique o que continua igual, apesar da mudança.",
+    "Organize os próximos passos com base no que já está claro.",
+  ],
+  "challenging|Surpresa|Conexões": [
+    "Compartilhe o que aconteceu com alguém de confiança.",
+    "Peça uma segunda perspectiva sobre a situação.",
+    "Converse com alguém que já passou por algo parecido.",
+    "Permita-se receber apoio enquanto processa a novidade.",
+    "Faça perguntas em vez de tentar entender tudo sozinha.",
+  ],
+  "challenging|Surpresa|Valor": [
+    "Pergunte-se: 'O que essa situação revela sobre o que é importante para mim?'",
+    "Observe quais sentimentos surgem junto com a surpresa.",
+    "Lembre-se de outras mudanças que você conseguiu enfrentar.",
+    "Reconheça seus recursos pessoais para lidar com imprevistos.",
+    "Confie que você pode se adaptar mesmo sem ter todas as respostas agora.",
+  ],
+  "challenging|Surpresa|Crescimento": [
+    "Procure identificar uma oportunidade escondida nessa mudança.",
+    "Experimente olhar a situação por um ângulo diferente.",
+    "Aprenda algo novo que possa ajudar neste momento.",
+    "Adapte seus planos sem abandonar seus objetivos principais.",
+    "Pergunte-se: 'O que esta experiência está me convidando a desenvolver?'",
   ],
 
   // ══════════════════════════════════════════════════
-  //  FALLBACKS GENÉRICOS
+  //  MODO POSITIVO — ações do Mapa de Ações (PDF)
+  // ══════════════════════════════════════════════════
+
+  // ── CONFIANÇA ──
+  "positive|Confiança|Corpo": [
+    "Faça uma atividade física que faça você se sentir forte e capaz.",
+    "Mantenha uma postura mais aberta ao caminhar e se movimentar.",
+    "Cuide da sua aparência de uma forma que aumente sua sensação de presença.",
+    "Escolha uma tarefa que você sabe fazer bem e conclua-a.",
+    "Perceba conscientemente como seu corpo reage quando você se sente segura.",
+  ],
+  "positive|Confiança|Segurança": [
+    "Relembre situações difíceis que você já conseguiu superar.",
+    "Faça uma lista dos recursos que possui hoje para lidar com desafios.",
+    "Organize os próximos passos de um objetivo importante.",
+    "Reconheça as decisões acertadas que tomou recentemente.",
+    "Confie mais no que você já sabe em vez de buscar mais respostas.",
+  ],
+  "positive|Confiança|Conexões": [
+    "Compartilhe uma conquista com alguém importante para você.",
+    "Ofereça ajuda a alguém que esteja precisando.",
+    "Aproxime-se de pessoas que fortalecem sua melhor versão.",
+    "Reconheça a contribuição de alguém para sua trajetória.",
+    "Permita-se confiar um pouco mais em quem já demonstrou ser confiável.",
+  ],
+  "positive|Confiança|Valor": [
+    "Liste três qualidades que você reconhece em si mesma.",
+    "Reconheça um progresso que costuma minimizar.",
+    "Lembre-se de uma situação em que agiu com coragem.",
+    "Valorize seu esforço, não apenas seus resultados.",
+    "Reforce para si mesma uma capacidade que já demonstrou várias vezes.",
+  ],
+  "positive|Confiança|Crescimento": [
+    "Dê um passo em direção a algo que você vem adiando.",
+    "Assuma um desafio um pouco maior do que faria normalmente.",
+    "Compartilhe uma ideia ou opinião que costuma guardar.",
+    "Experimente algo novo acreditando na sua capacidade de aprender.",
+    "Escolha uma meta que represente evolução para você nesta fase da vida.",
+  ],
+
+  // ── ALEGRIA ──
+  "positive|Alegria|Corpo": [
+    "Faça algo que desperte prazer genuíno em você hoje.",
+    "Dance, caminhe ou movimente-se celebrando sua energia.",
+    "Passe alguns minutos ao ar livre apreciando o momento.",
+    "Saboreie uma refeição ou bebida sem pressa.",
+    "Permita-se descansar sem sentir culpa.",
+  ],
+  "positive|Alegria|Segurança": [
+    "Reconheça algo que está funcionando bem na sua vida.",
+    "Registre uma conquista recente para não esquecê-la.",
+    "Agradeça por algo concreto que aconteceu hoje.",
+    "Observe quais escolhas contribuíram para esse momento positivo.",
+    "Reserve um tempo para aproveitar o que já construiu.",
+  ],
+  "positive|Alegria|Conexões": [
+    "Compartilhe uma boa notícia com alguém.",
+    "Demonstre carinho por uma pessoa importante para você.",
+    "Convide alguém para celebrar uma conquista, por menor que pareça.",
+    "Expresse gratidão a quem esteve ao seu lado.",
+    "Crie um momento agradável com pessoas que você gosta.",
+  ],
+  "positive|Alegria|Valor": [
+    "Reconheça algo em você que merece ser celebrado.",
+    "Escreva uma coisa que você fez bem esta semana e que costuma minimizar.",
+    "Relembre uma conquista que representa quem você é.",
+    "Valorize o caminho percorrido até aqui.",
+    "Agradeça a si mesma por não ter desistido em momentos difíceis.",
+  ],
+  "positive|Alegria|Crescimento": [
+    "Use essa energia para avançar em algo importante.",
+    "Experimente uma atividade nova que desperte entusiasmo.",
+    "Compartilhe o que aprendeu com alguém.",
+    "Invista tempo em algo que faça sua vida expandir.",
+    "Pergunte-se: 'Como posso levar mais disso para minha rotina?'",
+  ],
+
+  // ══════════════════════════════════════════════════
+  //  FALLBACKS GENÉRICOS POR NECESSIDADE
   // ══════════════════════════════════════════════════
   "fallback|positive|Corpo": [
-    "Reconhecer em voz alta que seu corpo está bem — isso é conquista",
-    "Continuar a rotina que está funcionando, sem mudar nada hoje",
-    "Agradecer ao seu corpo com um momento de prazer: banho demorado, alongamento, dança",
-    "Dormir cedo esta noite como forma de honrar o que construiu",
-    "Preparar uma refeição que você ama, com calma e presença"
+    "Reconheça em voz alta que seu corpo está bem — isso é conquista.",
+    "Continue a rotina que está funcionando, sem mudar nada hoje.",
+    "Agradeça ao seu corpo com um momento de prazer: banho demorado, alongamento, dança.",
+    "Durma cedo esta noite como forma de honrar o que construiu.",
+    "Prepare uma refeição que você ama, com calma e presença.",
   ],
   "fallback|positive|Segurança": [
-    "Anotar o que está te dando segurança agora — registrar fortalece",
-    "Reforçar a rotina que está te ancorando: não abandone o que funciona",
-    "Compartilhar com alguém próximo o quanto você se sente estável",
-    "Planejar o próximo passo com calma, porque você tem chão firme",
-    "Usar esse momento para organizar algo que estava pendente"
+    "Anote o que está te dando segurança agora — registrar fortalece.",
+    "Reforce a rotina que está te ancorando: não abandone o que funciona.",
+    "Compartilhe com alguém próximo o quanto você se sente estável.",
+    "Planeje o próximo passo com calma, aproveitando essa estabilidade.",
+    "Use esse momento para organizar algo que estava pendente.",
   ],
   "fallback|positive|Conexões": [
-    "Mandar uma mensagem para quem te fez sentir conectada",
-    "Marcar um encontro com essa pessoa em breve",
-    "Escrever o que essa conexão significa para você",
-    "Estar presente de verdade na próxima conversa — sem celular, sem pressa",
-    "Dizer em voz alta para essa pessoa o quanto ela importa"
+    "Mande uma mensagem para quem te fez sentir conectada.",
+    "Marque um encontro com essa pessoa em breve.",
+    "Escreva o que essa conexão significa para você.",
+    "Esteja presente de verdade na próxima conversa — sem celular, sem pressa.",
+    "Diga para essa pessoa o quanto ela importa para você.",
   ],
   "fallback|positive|Valor": [
-    "Escrever três coisas que você fez bem hoje — sem diminuir nenhuma",
-    "Celebrar o limite que você colocou ou a decisão que tomou",
-    "Registrar essa conquista para reler nos dias difíceis",
-    "Fazer algo só porque você gosta, sem justificar para ninguém",
-    "Compartilhar essa conquista com alguém que torce por você"
+    "Escreva três coisas que você fez bem hoje — sem diminuir nenhuma.",
+    "Celebre o limite que você colocou ou a decisão que tomou.",
+    "Registre essa conquista para reler nos dias difíceis.",
+    "Faça algo só porque você gosta, sem justificar para ninguém.",
+    "Compartilhe essa conquista com alguém que torce por você.",
   ],
   "fallback|positive|Crescimento": [
-    "Registrar o que te trouxe essa sensação de propósito",
-    "Planejar mais do que te faz sentir assim — é isso que te move",
-    "Compartilhar sua conquista com alguém de confiança",
-    "Dar o próximo passo em algo que você vem construindo",
-    "Agradecer por estar em movimento, mesmo nos dias difíceis"
+    "Registre o que te trouxe essa sensação de propósito.",
+    "Planeje mais do que te faz sentir assim — é isso que te move.",
+    "Compartilhe sua conquista com alguém de confiança.",
+    "Dê o próximo passo em algo que você vem construindo.",
+    "Agradeça a si mesma por estar em movimento.",
   ],
   "fallback|challenging|Corpo": [
-    "Dormir mais cedo esta noite — seu corpo está pedindo descanso",
-    "Beber água agora e fazer uma refeição com calma, sem tela",
-    "Tirar 10 minutos de descanso sem celular, sem fazer nada",
-    "Alongar o corpo por 5 minutos, prestando atenção em cada parte",
-    "Sair para caminhar, mesmo que por 10 minutos"
+    "Dê ao seu corpo o que ele está pedindo: descanso, água ou comida.",
+    "Faça uma caminhada curta para aliviar a tensão.",
+    "Tire alguns minutos de pausa, longe das telas.",
+    "Alongue o corpo com calma, prestando atenção na respiração.",
+    "Respire fundo algumas vezes até sentir o corpo desacelerar.",
   ],
   "fallback|challenging|Segurança": [
-    "Escrever o que está te gerando insegurança — tirar da cabeça já alivia",
-    "Fazer uma lista: o que posso controlar e o que não posso",
-    "Listar 3 coisas que ainda estão estáveis na sua vida agora",
-    "Criar uma pequena rotina para amanhã — previsibilidade traz segurança",
-    "Conversar com alguém de confiança sobre o que você está sentindo"
+    "Liste o que está sob seu controle agora.",
+    "Organize apenas as próximas horas do seu dia.",
+    "Anote três coisas que continuam estáveis na sua vida.",
+    "Adie decisões importantes até se sentir mais calma.",
+    "Converse com alguém de confiança sobre o que sente.",
   ],
   "fallback|challenging|Conexões": [
-    "Mandar uma mensagem para alguém que você sente saudade",
-    "Marcar um café ou uma conversa com alguém que te faz bem",
-    "Falar como você está se sentindo para uma pessoa de confiança",
-    "Fazer algo em grupo: uma aula, um encontro, um evento",
-    "Escrever o que você precisa de uma relação que não está recebendo"
+    "Mande uma mensagem para alguém que te faz bem.",
+    "Compartilhe como você está se sentindo com alguém próximo.",
+    "Aceite companhia, mesmo que por alguns minutos.",
+    "Peça ajuda em vez de carregar tudo sozinha.",
+    "Lembre-se de quem costuma estar ao seu lado.",
   ],
   "fallback|challenging|Valor": [
-    "Escrever 3 coisas que você admira em si mesma hoje",
-    "Quando o erro aparecer, perguntar: eu falaria isso com uma amiga?",
-    "Dizer não para algo que você não quer fazer",
-    "Fazer algo só porque você gosta, sem precisar justificar",
-    "Anotar uma conquista sua que você nunca parou para reconhecer"
+    "Fale consigo mesma como falaria com uma amiga querida.",
+    "Reconheça uma qualidade sua que continua presente.",
+    "Lembre-se de uma situação difícil que você atravessou.",
+    "Permita-se ser humana, sem exigir perfeição.",
+    "Relembre uma conquista sua que merece ser reconhecida.",
   ],
   "fallback|challenging|Crescimento": [
-    "Escrever uma coisa pequena que você pode fazer hoje em direção ao que sonha",
-    "Aprender algo novo por 10 minutos — um vídeo, um podcast, uma leitura",
-    "Perguntar a si mesma: o que eu faria se não tivesse medo?",
-    "Resgatar um projeto ou sonho que você deixou de lado",
-    "Escrever quem você quer ser daqui a 1 ano — com detalhes"
+    "Dê um pequeno passo em direção a algo importante para você.",
+    "Retome por 10 minutos algo que dá sentido à sua vida.",
+    "Pergunte-se o que essa experiência está te mostrando.",
+    "Experimente algo diferente da sua rotina.",
+    "Escolha uma ação que te aproxime da vida que deseja.",
   ]
 };
 
@@ -1612,12 +1618,14 @@ function restoreState() {
     if (!raw) return false;
     const saved = JSON.parse(raw);
     // Só restaura se estava no meio de um fluxo válido (step entre 1 e 6)
-    const stepsValidos = [1, 2, 3, 3.5, 3.8, 4.1, 4.2, 4.3, 4.4, 4.5, 5, 6];
+    const stepsValidos = [1, 2, 3, 3.5, 3.8, 4.1, 4.2, 4.3, 4.4, 4.5, 4.7, 5, 5.5, 6];
     if (!saved || !stepsValidos.includes(saved.step)) return false;
     if (!saved.mode) return false; // precisa ter modo definido
     // Garante que campos essenciais existam
     saved.diagRespostas = saved.diagRespostas || {};
     saved.diagNeed = saved.diagNeed || null;
+    saved.chosenNeed = saved.chosenNeed || null;
+    saved.pastEntry = saved.pastEntry || null;
     state = saved;
     return true;
   } catch(_) { return false; }
@@ -1656,9 +1664,9 @@ const DIAG_GROUPS = [
   {
     key: 'Valor', icon: '💛', label: 'Valor · Estima',
     perguntas: [
-      { texto: 'Estou me perdoando por um erro que cometi?',                          pontoNao: true },
-      { texto: 'Estou segura comigo mesma e gosto de quem eu sou?',                  pontoNao: true },
-      { texto: 'Consigo reconhecer minhas conquistas sem diminuí-las?',               pontoNao: true }
+      { texto: 'Falei comigo sem me criticar?',                                            pontoNao: true },
+      { texto: 'Estou segura comigo mesma e gosto de quem eu sou?',                       pontoNao: true },
+      { texto: 'Consigo reconhecer minhas conquistas sem esperar a aprovação de outros?',  pontoNao: true }
     ]
   },
   {
@@ -1717,7 +1725,9 @@ let state = {
   refinedNeed: null, eventText: '',
   bodyText: '', celebrateText: '', action: null, customAction: '',
   diagRespostas: {},   // { 'Corpo_0': 'sim'|'nao', … }
-  diagNeed: null       // { primary: 'Corpo', secondary: 'Segurança' } ou null
+  diagNeed: null,      // { primary: 'Corpo', secondary: 'Segurança' } ou null
+  chosenNeed: null,    // necessidade escolhida pela pessoa em caso de empate
+  pastEntry: null      // registro anterior da mesma combinação (releitura do passado)
 };
 
 function getEmotionData() {
@@ -1725,16 +1735,27 @@ function getEmotionData() {
   return EMOTIONS[state.mode].find(e => e.name === state.emotion);
 }
 function needKey() {
-  // Prioridade: resultado do diagnóstico > refinamento > emoção padrão
+  // Prioridade: escolha manual no empate > diagnóstico > refinamento > emoção padrão
+  if (state.chosenNeed) return state.chosenNeed;
   if (state.diagNeed && state.diagNeed.primary) return state.diagNeed.primary;
   if (state.refinedNeed) return state.refinedNeed;
   const em = getEmotionData();
   return em ? em.need : null;
 }
 function needKey2() {
-  // Segunda necessidade (apenas do diagnóstico)
+  // Segunda necessidade (apenas do diagnóstico). Some quando a pessoa já escolheu uma.
+  if (state.chosenNeed) return null;
   if (state.diagNeed && state.diagNeed.secondary) return state.diagNeed.secondary;
   return null;
+}
+// Há empate entre 2 necessidades ainda não resolvido pela pessoa?
+function temEmpate() {
+  return !state.chosenNeed &&
+         state.diagNeed &&
+         state.diagNeed.primary &&
+         state.diagNeed.secondary &&
+         NEEDS[state.diagNeed.primary] &&
+         NEEDS[state.diagNeed.secondary];
 }
 function needsRefinement() {
   const em = getEmotionData();
@@ -1804,7 +1825,7 @@ function goToLanding() {
   document.getElementById('screen-diary').classList.remove('active');
   document.getElementById('screen-landing').classList.add('active');
   clearStateCache();
-  state = { step: 0, mode: null, emotion: null, refinedNeed: null, eventText: '', bodyText: '', celebrateText: '', action: null, customAction: '', diagRespostas: {}, diagNeed: null };
+  state = { step: 0, mode: null, emotion: null, refinedNeed: null, eventText: '', bodyText: '', celebrateText: '', action: null, customAction: '', diagRespostas: {}, diagNeed: null, chosenNeed: null, pastEntry: null };
 }
 
 // ── INIT ──────────────────────────────────────────────
@@ -1816,7 +1837,7 @@ function startDiary() {
   // Restaura rascunho se houver progresso salvo
   const hadDraft = restoreState();
   if (!hadDraft) {
-    state = { step: 0, mode: null, emotion: null, refinedNeed: null, eventText: '', bodyText: '', celebrateText: '', action: null, customAction: '', diagRespostas: {}, diagNeed: null };
+    state = { step: 0, mode: null, emotion: null, refinedNeed: null, eventText: '', bodyText: '', celebrateText: '', action: null, customAction: '', diagRespostas: {}, diagNeed: null, chosenNeed: null, pastEntry: null };
   }
 
   setTab('inicio');
@@ -1841,7 +1862,9 @@ function render() {
     else if (s === 4.3) renderDiagGroup(c, 2);
     else if (s === 4.4) renderDiagGroup(c, 3);
     else if (s === 4.5) renderDiagGroup(c, 4);
+    else if (s === 4.7) renderNeedChoice(c);
     else if (s === 5)   renderNeed(c);
+    else if (s === 5.5) renderPastReread(c);
     else if (s === 6)   renderAction(c);
     else                renderComplete(c);
   } catch(err) {
@@ -1861,7 +1884,7 @@ function render() {
 function updateProgress() {
   const fill = document.getElementById('progress-fill');
   // mapeamos os steps para 0–100%
-  const stepMap = { 0:0, 1:10, 2:20, 3:30, 3.5:35, 3.8:40, 4.1:48, 4.2:56, 4.3:62, 4.4:68, 4.5:74, 5:82, 6:90, 7:100 };
+  const stepMap = { 0:0, 1:10, 2:20, 3:30, 3.5:35, 3.8:40, 4.1:48, 4.2:56, 4.3:62, 4.4:68, 4.5:74, 4.7:78, 5:82, 5.5:86, 6:90, 7:100 };
   const pct = stepMap[state.step] !== undefined ? stepMap[state.step] : 100;
   fill.style.width = pct + '%';
   fill.style.background = state.mode === 'positive' ? green() : orange();
@@ -2094,43 +2117,115 @@ function advanceDiag(groupIdx, nextStep) {
   // se é o último grupo, calcula o resultado
   if (groupIdx === DIAG_GROUPS.length - 1) {
     state.diagNeed = calcDiagNeed();
+    // Empate entre exatamente 2 necessidades → tela de escolha
+    if (temEmpate()) { state.step = 4.7; render(); return; }
   }
   state.step = nextStep;
   render();
 }
 
+// ── TELA DE ESCOLHA EM CASO DE EMPATE (step 4.7) ──────
+function renderNeedChoice(c) {
+  const isPos = state.mode === 'positive';
+  const n1 = state.diagNeed.primary;
+  const n2 = state.diagNeed.secondary;
+  const descMap = NEED_DESC_CHOICE[isPos ? 'positive' : 'challenging'];
+
+  const card = (nk) => {
+    const n = NEEDS[nk];
+    const selected = state.chosenNeed === nk;
+    const bgSel = isPos ? 'rgba(74,94,66,0.18)' : 'rgba(232,96,26,0.14)';
+    return `
+      <button class="tone-btn need-choice-opt" data-need="${nk}"
+        style="border-color:${selected ? accent() : 'rgba(255,255,255,0.12)'};background:${selected ? bgSel : 'transparent'};align-items:flex-start"
+        onclick="selectNeedChoice('${nk}')">
+        <span class="tone-icon" style="font-size:26px">${n.icon}</span>
+        <div>
+          <div class="tone-label" style="color:${accent()};font-size:15px;margin-bottom:4px">${nk}</div>
+          <div class="tone-desc" style="line-height:1.55">${descMap[nk]}</div>
+        </div>
+      </button>`;
+  };
+
+  c.innerHTML = `
+    ${dot(4)}
+    <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:${accent()};font-family:'Poppins',sans-serif;font-weight:500;margin-bottom:8px">Duas necessidades em destaque</p>
+    <h2 class="card-title">Duas coisas apareceram com a mesma força. Qual combina mais com o que você sente agora?</h2>
+    <p class="card-sub" style="margin-bottom:22px">Leia as duas com calma e escolha a que mais te representa neste momento.</p>
+    ${card(n1)}
+    ${card(n2)}
+    <div class="nav-row" style="margin-top:8px">
+      <button class="btn-back" onclick="goTo(4.5)">← Voltar</button>
+      <button class="btn-next" id="choice-next" style="background:${accent()}" ${state.chosenNeed ? '' : 'disabled'} onclick="confirmNeedChoice()">Continuar →</button>
+    </div>
+  `;
+}
+
+function selectNeedChoice(nk) {
+  state.chosenNeed = nk;
+  persistState();
+  const c = document.getElementById('card-content');
+  const ac = accent();
+  const bgSel = state.mode === 'positive' ? 'rgba(74,94,66,0.18)' : 'rgba(232,96,26,0.14)';
+  c.querySelectorAll('.need-choice-opt').forEach(btn => {
+    if (btn.dataset.need === nk) {
+      btn.style.borderColor = ac;
+      btn.style.background = bgSel;
+    } else {
+      btn.style.borderColor = 'rgba(255,255,255,0.12)';
+      btn.style.background = 'transparent';
+    }
+  });
+  const nextBtn = document.getElementById('choice-next');
+  if (nextBtn) nextBtn.disabled = false;
+}
+
+function confirmNeedChoice() {
+  // Mantém só a necessidade escolhida; a segunda deixa de existir no fluxo
+  state.diagNeed = { primary: state.chosenNeed, secondary: null };
+  state.step = 5;
+  render();
+}
+
+// ── AVANÇA DA NECESSIDADE → checa releitura do passado ──
+function advanceFromNeed() {
+  const btn = document.getElementById('need-next-btn');
+  if (btn) { btn.textContent = 'Carregando…'; btn.disabled = true; }
+  buscarHistoricoCombinacao().then(entry => {
+    if (entry) {
+      state.pastEntry = entry;
+      state.step = 5.5;
+    } else {
+      state.pastEntry = null;
+      state.step = 6;
+    }
+    render();
+  });
+}
+
 function renderNeed(c) {
   const nk = needKey();
-  const nk2 = needKey2();
   const n = NEEDS[nk];
   const isPos = state.mode === 'positive';
   const variant = isPos ? n.positive : n.challenging;
+  const msg = (NEED_MESSAGES[isPos ? 'positive' : 'challenging'] || {})[nk] || '';
 
   const celebrateField = isPos ? `
     <p class="card-sub" style="margin-bottom:8px">O que tornou isso possível?</p>
     <textarea id="ta-celebrate" placeholder="Ex: Eu me dediquei, confiei em mim, pedi ajuda, mantive minha rotina…">${state.celebrateText}</textarea>
   ` : '';
 
-  // Segunda necessidade — funciona tanto em positivo quanto em challenging
-  let secondNeedHtml = '';
-  if (nk2 && NEEDS[nk2]) {
-    const n2 = NEEDS[nk2];
-    const variant2 = isPos ? n2.positive : n2.challenging;
-    const label2 = isPos ? 'Segunda necessidade em destaque' : 'Sua segunda maior necessidade hoje';
-    secondNeedHtml = `
-      <p class="card-sub" style="margin-top:6px;margin-bottom:8px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.4)">${label2}</p>
-      <div class="need-card" style="opacity:0.8">
-        <span class="need-icon">${n2.icon}</span>
-        <div>
-          <div class="need-label">${variant2.label}</div>
-          <div class="need-sub">${variant2.sub}</div>
-        </div>
-      </div>`;
-  }
-
   const firstLabel = isPos
     ? `<p class="card-sub" style="margin-bottom:8px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.4)">Necessidade mais suprida agora ✨</p>`
     : `<p class="card-sub" style="margin-bottom:8px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.4)">Sua maior necessidade atual</p>`;
+
+  // Mensagem acolhedora que identifica a necessidade e prepara para as ações
+  const msgHtml = msg ? `
+    <div style="background:${isPos ? 'rgba(74,94,66,0.15)' : 'rgba(232,96,26,0.1)'};border-left:3px solid ${accent()};border-radius:10px;padding:14px 16px;margin-bottom:20px">
+      <p style="font-size:13.5px;color:rgba(255,255,255,0.85);font-family:'Poppins',sans-serif;font-weight:300;line-height:1.65;font-style:italic">${msg}</p>
+    </div>` : '';
+
+  const backStep = state.chosenNeed ? 4.7 : 4.5;
 
   c.innerHTML = `
     ${dot(4)}
@@ -2143,13 +2238,61 @@ function renderNeed(c) {
         <div class="need-sub">${variant.sub}</div>
       </div>
     </div>
-    ${secondNeedHtml}
+    ${msgHtml}
     ${celebrateField}
-    ${navRow(4.5, 6, false)}
+    <div class="nav-row">
+      <button class="btn-back" onclick="goTo(${backStep})">← Voltar</button>
+      <button class="btn-next" id="need-next-btn" style="background:${accent()}" onclick="advanceFromNeed()">Continuar →</button>
+    </div>
   `;
   if (isPos) {
     document.getElementById('ta-celebrate').addEventListener('input', e => state.celebrateText = e.target.value);
   }
+}
+
+// ── TELA DE RELEITURA DO PASSADO (step 5.5) ───────────
+function renderPastReread(c) {
+  const e = state.pastEntry;
+  if (!e) { state.step = 6; render(); return; }
+
+  const estrelas = '⭐'.repeat(Math.max(0, Math.min(5, Math.round(e.rating || 0))));
+
+  c.innerHTML = `
+    ${dot(4)}
+    <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:${accent()};font-family:'Poppins',sans-serif;font-weight:500;margin-bottom:8px">Você já passou por aqui</p>
+    <h2 class="card-title">Essa emoção e essa necessidade já apareceram juntas antes.</h2>
+    <p class="card-sub" style="margin-bottom:20px">Perceber esses padrões é uma forma poderosa de se conhecer — e de agir.</p>
+
+    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:18px 20px;margin-bottom:20px">
+      <p style="font-size:13px;color:rgba(255,255,255,0.75);font-family:'Poppins',sans-serif;font-weight:300;line-height:1.7;margin-bottom:10px">
+        ${e.date ? `Em <strong style="color:rgba(255,255,255,0.92);font-weight:500">${e.date}</strong>, você` : 'Você'} se sentiu assim e escolheu:
+      </p>
+      <p style="font-size:15px;color:#fff;font-family:'Lora',serif;line-height:1.5;margin-bottom:12px">"${e.action}"</p>
+      <p style="font-size:12px;color:rgba(255,255,255,0.55);font-family:'Poppins',sans-serif;font-weight:300">
+        Você avaliou essa ação com ${estrelas} <strong style="color:rgba(255,255,255,0.85)">${e.rating}/5</strong>
+      </p>
+    </div>
+
+    <p class="card-sub" style="margin-bottom:14px">Gostaria de repetir essa ação ou tentar outra?</p>
+
+    <button class="btn-finish" style="background:${accent()};margin-bottom:10px" onclick="repetirAcaoPassada()">
+      Repetir essa ação
+    </button>
+    <button class="action-btn" style="text-align:center" onclick="goTo(6)">
+      Quero escolher outra
+    </button>
+    <div class="nav-row" style="margin-top:10px">
+      <button class="btn-back" onclick="goTo(5)">← Voltar</button>
+    </div>
+  `;
+}
+
+function repetirAcaoPassada() {
+  if (state.pastEntry && state.pastEntry.action) {
+    state.action = state.pastEntry.action;
+    state.customAction = '';
+  }
+  finish();
 }
 
 // Monta badge de avaliação da comunidade para uma ação
@@ -2359,6 +2502,15 @@ function closeWeek() {
   }
 }
 
+// Volta direto para a tela inicial a partir da semana
+function weekToHome() {
+  document.getElementById('screen-week').classList.remove('active');
+  document.getElementById('screen-diary').classList.remove('active');
+  document.getElementById('screen-landing').classList.add('active');
+  mostrarBoasVindas();
+  verificarRascunhoLanding();
+}
+
 function renderWeek() {
   const container = document.getElementById('week-content');
   const entries = loadHistory();
@@ -2534,7 +2686,7 @@ function goTo(s) { state.step = s; render(); }
 
 function resetDiary() {
   clearStateCache();
-  state = { step: 0, mode: null, emotion: null, refinedNeed: null, eventText: '', bodyText: '', celebrateText: '', action: null, customAction: '', diagRespostas: {}, diagNeed: null };
+  state = { step: 0, mode: null, emotion: null, refinedNeed: null, eventText: '', bodyText: '', celebrateText: '', action: null, customAction: '', diagRespostas: {}, diagNeed: null, chosenNeed: null, pastEntry: null };
   render();
 }
 </script>
