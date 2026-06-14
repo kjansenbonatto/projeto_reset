@@ -162,7 +162,7 @@ html, body {
   font-family: 'Lora', serif;
   font-size: clamp(15px, 4vw, 19px);
   font-style: italic;
-  color: rgba(244,237,224,0.92);
+  color: var(--landing-desc-color);
   max-width: 420px;
   margin-bottom: 16px;
   line-height: 1.45;
@@ -2682,7 +2682,7 @@ function renderNeedChoice(c) {
     const bgSel = isPos ? 'rgba(74,94,66,0.18)' : 'rgba(232,96,26,0.14)';
     return `
       <button class="tone-btn need-choice-opt" data-need="${nk}"
-        style="border-color:${selected ? accent() : 'rgba(255,255,255,0.12)'};background:${selected ? bgSel : 'transparent'};align-items:flex-start"
+        style="border-color:${selected ? accent() : 'var(--border-input)'};background:${selected ? bgSel : 'transparent'};align-items:flex-start"
         onclick="selectNeedChoice('${nk}')">
         <span class="tone-icon" style="font-size:26px">${n.icon}</span>
         <div>
@@ -3014,7 +3014,7 @@ ${(() => {
         <p style="font-size:13px;color:#E8601A;font-family:'Poppins',sans-serif;font-weight:500;margin-bottom:4px">Avalie sua ação primeiro ⭐</p>
         <p style="font-size:12px;color:var(--text-secondary);font-family:'Poppins',sans-serif;font-weight:300">Vá em Minha semana e dê uma nota antes de fazer um novo registro.</p>
       </div>
-      <button class="btn-restart" style="border-color:rgba(255,255,255,0.15);color:rgba(255,255,255,0.25);cursor:not-allowed" disabled>
+      <button class="btn-restart" style="border-color:var(--border-subtle);color:var(--text-tertiary);cursor:not-allowed" disabled>
         Novo registro
       </button>`;
     }
@@ -3022,7 +3022,7 @@ ${(() => {
       Novo registro
     </button>`;
   })()}
-    <button onclick="openWeek()" style="width:100%;background:transparent;border:2px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px;font-size:13px;cursor:pointer;font-family:'Poppins',sans-serif;color:var(--text-secondary);transition:all 0.15s" onmouseover="this.style.borderColor='rgba(255,255,255,0.35)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)'">
+    <button onclick="openWeek()" style="width:100%;background:transparent;border:2px solid var(--border-input);border-radius:12px;padding:14px;font-size:13px;cursor:pointer;font-family:'Poppins',sans-serif;color:var(--text-secondary);transition:all 0.15s" onmouseover="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--text-secondary')" onmouseout="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--border-input')">
       📅 Ver minha semana
     </button>
   `;
