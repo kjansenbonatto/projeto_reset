@@ -1,5 +1,5 @@
 // Mude esta versão a cada deploy para forçar atualização automática
-const CACHE_NAME = 'reset-emocional-v4';
+const CACHE_NAME = 'reset-emocional-v5';
 const ASSETS = [
   '/projeto_reset/',
   '/projeto_reset/index.html',
