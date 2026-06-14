@@ -1195,10 +1195,378 @@ body.theme-light .pwa-install-btn {
 .temp-option-title { font-size: 14px; font-weight: 500; color: var(--text-primary); margin-bottom: 2px; }
 .temp-option-desc { font-size: 12px; color: var(--text-secondary); font-weight: 300; }
 
-@media (max-width: 420px) {
-  .card-body { padding: 24px 20px; }
-  .landing-title { font-size: 38px; }
+/* ── BOTÃO PRINCIPAL — VERDE NO TEMA CLARO ── */
+body.theme-light .landing-btn {
+  background: #4A5E42;
+  color: #F4EDE0;
+  box-shadow: 0 8px 24px rgba(74,94,66,0.3);
 }
+
+/* ── CONTEXTO LANDING ── */
+.landing-ctx {
+  font-size: 12px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 300;
+  color: var(--landing-desc-color);
+  opacity: 0.65;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+  line-height: 1.5;
+}
+
+/* ── SEPARADOR LANDING ── */
+.landing-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--orange);
+  font-size: 11px;
+  letter-spacing: 2px;
+  opacity: 0.5;
+  margin: 8px 0 16px;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 280px;
+  justify-content: center;
+}
+.landing-divider::before,
+.landing-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--orange);
+  opacity: 0.3;
+}
+
+/* ── CALENDÁRIO NA LANDING ── */
+.calendar-section {
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+  opacity: 0;
+  animation: fadeUp 0.7s ease 0.75s forwards;
+}
+
+.calendar-next-event {
+  border-radius: 18px;
+  padding: 20px;
+  margin-bottom: 10px;
+  border: 1.5px solid var(--orange);
+  background: rgba(232,96,26,0.08);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.calendar-next-event::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #E8601A, #F0904A);
+}
+.calendar-next-event:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(232,96,26,0.2); }
+
+.cal-next-label {
+  font-size: 9px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--orange);
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.cal-next-date {
+  font-family: 'Lora', serif;
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--landing-title-color);
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+.cal-next-title {
+  font-size: 13px;
+  color: var(--landing-desc-color);
+  font-weight: 400;
+  font-family: 'Poppins', sans-serif;
+  margin-bottom: 10px;
+  opacity: 0.85;
+}
+.cal-next-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  color: var(--orange);
+  background: rgba(232,96,26,0.1);
+  border: 1px solid rgba(232,96,26,0.3);
+  border-radius: 100px;
+  padding: 5px 12px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+.cal-next-link:hover { background: var(--orange); color: #fff; }
+
+.calendar-list { display: flex; flex-direction: column; gap: 8px; }
+
+.cal-card {
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  transition: all 0.2s;
+  opacity: 0;
+  animation: fadeUp 0.4s ease forwards;
+}
+body.theme-light .cal-card { background: rgba(35,32,26,0.04); }
+.cal-card:hover { border-color: var(--orange); transform: translateX(3px); }
+.cal-card.today { border-color: var(--orange); animation: calPulse 2s ease-in-out infinite, fadeUp 0.4s ease forwards; }
+
+@keyframes calPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232,96,26,0); }
+  50% { box-shadow: 0 0 0 4px rgba(232,96,26,0.15); }
+}
+
+.cal-date-box {
+  min-width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(232,96,26,0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.cal-day { font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; color: var(--orange); line-height: 1; }
+.cal-month { font-family: 'Poppins', sans-serif; font-size: 8px; text-transform: uppercase; letter-spacing: 1px; color: var(--orange); opacity: 0.7; }
+
+.cal-info { flex: 1; min-width: 0; }
+.cal-event-icon { font-size: 13px; margin-right: 4px; }
+.cal-event-title { font-size: 13px; font-family: 'Poppins', sans-serif; font-weight: 500; color: var(--landing-title-color); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-event-sub { font-size: 11px; color: var(--landing-desc-color); opacity: 0.55; font-family: 'Poppins', sans-serif; font-weight: 300; }
+
+.cal-link-btn {
+  font-size: 18px;
+  text-decoration: none;
+  flex-shrink: 0;
+  opacity: 0.7;
+  transition: opacity 0.15s, transform 0.15s;
+}
+.cal-link-btn:hover { opacity: 1; transform: scale(1.2); }
+
+.cal-loading {
+  text-align: center;
+  font-size: 12px;
+  color: var(--landing-desc-color);
+  opacity: 0.4;
+  font-family: 'Poppins', sans-serif;
+  padding: 12px 0;
+}
+
+/* ── CARTA PARA O FUTURO ── */
+.letter-cards-section {
+  width: 100%;
+  max-width: 340px;
+  margin: 12px auto 0;
+  position: relative;
+  z-index: 1;
+}
+
+.letter-ready-card {
+  border-radius: 16px;
+  padding: 18px 20px;
+  background: rgba(74,94,66,0.1);
+  border: 1.5px solid var(--green);
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.letter-ready-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(74,94,66,0.2); }
+
+.letter-envelope {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 6px;
+  animation: letterWiggle 3s ease-in-out infinite;
+}
+@keyframes letterWiggle {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(-8deg); }
+  40% { transform: rotate(8deg); }
+  60% { transform: rotate(-4deg); }
+  80% { transform: rotate(4deg); }
+}
+
+.letter-ready-title {
+  font-family: 'Lora', serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--green);
+  margin-bottom: 4px;
+}
+.letter-ready-sub {
+  font-size: 11px;
+  color: var(--landing-desc-color);
+  opacity: 0.6;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 300;
+}
+
+.letter-progress-card {
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-subtle);
+  margin-bottom: 8px;
+  text-align: left;
+}
+body.theme-light .letter-progress-card { background: rgba(35,32,26,0.04); }
+
+.letter-progress-title {
+  font-size: 12px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  color: var(--landing-title-color);
+  margin-bottom: 2px;
+}
+.letter-progress-sub {
+  font-size: 11px;
+  color: var(--landing-desc-color);
+  opacity: 0.55;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 300;
+  margin-bottom: 10px;
+}
+.letter-progress-bar-wrap {
+  width: 100%;
+  height: 4px;
+  background: var(--border-input);
+  border-radius: 100px;
+  overflow: hidden;
+}
+.letter-progress-bar-fill {
+  height: 100%;
+  border-radius: 100px;
+  background: linear-gradient(90deg, var(--green), #6a8a60);
+  transition: width 0.6s ease;
+}
+
+/* ── TELA DE LEITURA DA CARTA ── */
+#screen-letter-read {
+  min-height: 100vh;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 16px 80px;
+  background: var(--bg-main);
+}
+.letter-read-header {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 0 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 28px;
+  position: sticky;
+  top: 0;
+  background: var(--bg-main);
+  z-index: 10;
+}
+.letter-read-content {
+  width: 100%;
+  max-width: 500px;
+  background: var(--bg-card);
+  border-radius: 20px;
+  border: 1px solid var(--border-subtle);
+  padding: 32px 28px;
+  margin-bottom: 24px;
+}
+.letter-read-meta {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  font-family: 'Poppins', sans-serif;
+  margin-bottom: 20px;
+}
+.letter-read-text {
+  font-family: 'Lora', serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.8;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+}
+.letter-read-actions {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── TELA DE ESCRITA DA CARTA (exercício) ── */
+.letter-write-wrap {
+  width: 100%;
+  max-width: 500px;
+}
+.letter-goal-opts {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.letter-goal-btn {
+  flex: 1;
+  padding: 12px 8px;
+  border-radius: 12px;
+  border: 2px solid var(--border-input);
+  background: transparent;
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+.letter-goal-btn.selected {
+  border-color: var(--green);
+  color: var(--green);
+  background: rgba(74,94,66,0.1);
+}
+.letter-textarea {
+  width: 100%;
+  min-height: 200px;
+  background: var(--bg-input);
+  border: 1.5px solid var(--border-input);
+  border-radius: 14px;
+  padding: 16px;
+  font-family: 'Lora', serif;
+  font-size: 15px;
+  color: var(--text-primary);
+  resize: vertical;
+  outline: none;
+  line-height: 1.7;
+  margin-bottom: 20px;
+  transition: border-color 0.2s;
+}
+.letter-textarea:focus { border-color: var(--green); }
+.letter-textarea::placeholder { color: var(--text-tertiary); font-style: italic; }
 </style>
 </head>
 <body>
@@ -1249,12 +1617,36 @@ body.theme-light .pwa-install-btn {
   <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" title="Alternar tema">🌙</button>
 
   <p class="landing-greeting" id="landing-greeting" style="display:none"></p>
+  <p class="landing-ctx" id="landing-ctx" style="display:none"></p>
   <h1 class="landing-title">Reset<em>Emocional</em></h1>
   <p class="landing-desc">Um espaço só seu para nomear o que sente, entender o que precisa e escolher uma ação de cuidado — todos os dias.</p>
   <button class="landing-btn" onclick="startDiary()">Começar meu registro →</button>
   <button class="landing-btn-week" style="margin-bottom:10px" onclick="openExercises()">⏸️ Momento de reset</button>
   <button class="landing-btn-week" onclick="openWeek()">📅 Ver minha semana</button>
+
+  <!-- Cartas prontas para abrir -->
+  <div class="letter-cards-section" id="landing-letters" style="display:none"></div>
+
+  <!-- Separador -->
+  <div class="landing-divider" id="landing-cal-divider" style="display:none">
+    <span>✦</span>
+  </div>
+
+  <!-- Calendário -->
+  <div class="calendar-section" id="landing-calendar" style="display:none">
+    <div class="cal-loading" id="cal-loading">carregando agenda...</div>
+  </div>
+
   <p class="landing-footer">Kamila Bonatto · @eukamilabonatto</p>
+</div>
+
+<!-- ══ LETTER READ ══ -->
+<div class="screen" id="screen-letter-read">
+  <div class="letter-read-header">
+    <h2 class="exercises-title">Carta para o <em>Futuro</em></h2>
+    <button class="btn-week-back" onclick="closeLetterRead()">← Voltar</button>
+  </div>
+  <div id="letter-read-body" style="width:100%;max-width:500px;"></div>
 </div>
 
 <!-- ══ EXERCISES LIST ══ -->
@@ -1289,6 +1681,15 @@ body.theme-light .pwa-install-btn {
       <div class="exercise-card-body">
         <div class="exercise-card-title">Reset nos Pensamentos</div>
         <div class="exercise-card-desc">Use o frio para interromper pensamentos acelerados</div>
+      </div>
+      <div class="exercise-card-arrow">›</div>
+    </div>
+
+    <div class="exercise-card" onclick="openExercise('letter')">
+      <div class="exercise-card-icon" style="background:rgba(74,94,66,0.12);">✉️</div>
+      <div class="exercise-card-body">
+        <div class="exercise-card-title">Carta para o Futuro</div>
+        <div class="exercise-card-desc">Escreva uma mensagem para você mesma — e leia quando estiver pronta</div>
       </div>
       <div class="exercise-card-arrow">›</div>
     </div>
@@ -1442,7 +1843,7 @@ async function tentarAcesso() {
       campo.style.border = "1.5px solid #E8601A";
       btn.textContent = "Acessar";
       btn.disabled = false;
-      setTimeout(() => { erro.textContent = ""; campo.style.border = "1.5px solid rgba(244,237,224,0.2)"; }, 3000);
+      setTimeout(() => { erro.textContent = ""; campo.style.border = "1.5px solid var(--border-input)"; }, 3000);
     }
   } catch(err) {
     erro.textContent = "Erro de conexão. Tente novamente.";
@@ -1487,6 +1888,11 @@ function mostrarBoasVindas() {
     ? `${saudacao}, <strong>${primeiroNome}</strong>. ${complemento}`
     : `${saudacao}. ${complemento}`;
   el.style.display = 'block';
+
+  // Carrega dados da landing
+  mostrarContextoLanding();
+  carregarCalendario();
+  carregarCartas();
 }
 
 // ── EMOÇÕES ───────────────────────────────────────────
@@ -2958,6 +3364,9 @@ function finish() {
   };
   addToHistory(entry);
 
+  // Atualiza contagem das cartas em andamento
+  carregarCartas();
+
   // Envia dados anônimos para a comunidade (sem identificar a pessoa)
   if (!APPS_SCRIPT_URL.startsWith("COLE") && finalAction) {
     const token = sessionStorage.getItem("re-token") || "";
@@ -3106,7 +3515,7 @@ function renderWeek() {
         </div>
       </div>
       ${topEmotion ? `
-      <div class="ws-item" style="margin-bottom:10px;background:rgba(255,255,255,0.06);border-radius:12px;padding:12px 14px;">
+      <div class="ws-item" style="margin-bottom:10px;background:var(--ws-item-bg);border-radius:12px;padding:12px 14px;">
         <div class="ws-label">Emoção mais frequente</div>
         <div class="ws-value" style="font-size:14px">${topEmotion[0]} · ${topEmotion[1]}x</div>
       </div>` : ''}
@@ -3329,7 +3738,7 @@ if ('serviceWorker' in navigator) {
 
 // ── WHATSAPP ──────────────────────────────────────────
 function abrirWhatsApp() {
-  window.open('https://wa.me/5554991107566?text=Ol%C3%A1%2C+preciso+de+mais+ajuda.', '_blank');
+  window.open('https://wa.me/5554991107566?text=Ol%C3%A1%2C+gostaria+de+saber+mais+sobre+o+acompanhamento.', '_blank');
 }
 
 // ── TELA DE EXERCÍCIOS ────────────────────────────────
@@ -3379,6 +3788,7 @@ function renderExercise(type) {
   if (type === 'breath') renderBreath(c);
   else if (type === 'sensory') renderSensory(c);
   else if (type === 'cold') renderCold(c);
+  else if (type === 'letter') renderLetter(c);
 }
 
 // ── EXERCÍCIO 1: RESETA E RESPIRA ─────────────────────
@@ -3643,6 +4053,298 @@ function exerciseDone() {
   document.getElementById('screen-exercise-detail').classList.remove('active');
   document.getElementById('screen-landing').classList.add('active');
   mostrarBoasVindas();
+  carregarCartas();
+}
+
+// ── CALENDÁRIO ────────────────────────────────────────
+const MESES = { janeiro:1,fevereiro:2,março:3,abril:4,maio:5,junho:6,julho:7,agosto:8,setembro:9,outubro:10,novembro:11,dezembro:12 };
+const MESES_ABREV = ['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+function eventIcon(titulo) {
+  const t = titulo.toLowerCase();
+  if (t.includes('live')) return '📡';
+  if (t.includes('aula') || t.includes('módulo') || t.includes('modulo')) return '📚';
+  if (t.includes('sessão') || t.includes('sessao') || t.includes('kamila')) return '🌿';
+  return '📅';
+}
+
+function toDateObj(dia, mes, ano) {
+  const m = MESES[String(mes).toLowerCase().trim()] || 1;
+  return new Date(Number(ano), m - 1, Number(dia));
+}
+
+async function carregarCalendario() {
+  const token = sessionStorage.getItem('re-token');
+  if (!token) return;
+  const calEl = document.getElementById('landing-calendar');
+  const divEl = document.getElementById('landing-cal-divider');
+  if (!calEl) return;
+
+  try {
+    const url = `${APPS_SCRIPT_URL}?acao=getCalendario&token=${encodeURIComponent(token)}`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!data.ok || !data.eventos || data.eventos.length === 0) {
+      calEl.style.display = 'none';
+      if (divEl) divEl.style.display = 'none';
+      return;
+    }
+
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+
+    const eventos = data.eventos
+      .map(e => ({ ...e, _date: toDateObj(e.dia, e.mes, e.ano) }))
+      .filter(e => e._date >= hoje)
+      .sort((a,b) => a._date - b._date);
+
+    if (!eventos.length) {
+      calEl.style.display = 'none';
+      if (divEl) divEl.style.display = 'none';
+      return;
+    }
+
+    if (divEl) divEl.style.display = 'flex';
+    calEl.style.display = 'block';
+
+    let html = '';
+    const prox = eventos[0];
+    const isHoje = prox._date.getTime() === hoje.getTime();
+    const tituloProx = prox.token ? 'Sua sessão com Kamila' : prox.evento;
+    const iconProx = eventIcon(tituloProx);
+    const mesNome = String(prox.mes).charAt(0).toUpperCase() + String(prox.mes).slice(1).toLowerCase();
+
+    html += `<div class="calendar-next-event">
+      <div class="cal-next-label">${isHoje ? '🔴 HOJE' : '📌 PRÓXIMO EVENTO'}</div>
+      <div class="cal-next-date">${iconProx} ${prox.dia} de ${mesNome}</div>
+      <div class="cal-next-title">${tituloProx}</div>
+      ${prox.link ? `<a class="cal-next-link" href="${prox.link}" target="_blank">Entrar na reunião →</a>` : ''}
+    </div>`;
+
+    if (eventos.length > 1) {
+      html += '<div class="calendar-list">';
+      eventos.slice(1).forEach((e, i) => {
+        const t = e.token ? 'Sua sessão com Kamila' : e.evento;
+        const ic = eventIcon(t);
+        const isT = e._date.getTime() === hoje.getTime();
+        const mIdx = MESES[String(e.mes).toLowerCase().trim()] || 1;
+        const mAbrev = MESES_ABREV[mIdx];
+        const mNome = String(e.mes).charAt(0).toUpperCase() + String(e.mes).slice(1).toLowerCase();
+        html += `<div class="cal-card ${isT ? 'today' : ''}" style="animation-delay:${(i+1)*0.08}s">
+          <div class="cal-date-box">
+            <span class="cal-day">${e.dia}</span>
+            <span class="cal-month">${mAbrev}</span>
+          </div>
+          <div class="cal-info">
+            <div class="cal-event-title"><span class="cal-event-icon">${ic}</span>${t}</div>
+            <div class="cal-event-sub">${mNome} ${e.ano}</div>
+          </div>
+          ${e.link ? `<a class="cal-link-btn" href="${e.link}" target="_blank" title="Entrar">🔗</a>` : ''}
+        </div>`;
+      });
+      html += '</div>';
+    }
+
+    calEl.innerHTML = html;
+  } catch(err) {
+    calEl.style.display = 'none';
+    if (divEl) divEl.style.display = 'none';
+  }
+}
+
+// ── SAUDAÇÃO CONTEXTUAL ───────────────────────────────
+function mostrarContextoLanding() {
+  const token = sessionStorage.getItem('re-token');
+  if (!token) return;
+  const hist = JSON.parse(localStorage.getItem('re-history-' + token) || '[]');
+  const el = document.getElementById('landing-ctx');
+  if (!el) return;
+
+  const hoje = new Date().toDateString();
+  const semana = new Date(); semana.setDate(semana.getDate() - 7);
+  const regSemana = hist.filter(r => new Date(r.timestamp) > semana).length;
+  const regHoje = hist.some(r => new Date(r.timestamp).toDateString() === hoje);
+
+  let msg = '';
+  if (!hist.length) return;
+  if (regHoje && regSemana > 1) msg = `Você fez ${regSemana} registros essa semana 🌱`;
+  else if (regHoje) msg = 'Que bom te ver de novo hoje 💛';
+  else if (regSemana > 0) msg = `Você fez ${regSemana} registro${regSemana > 1 ? 's' : ''} essa semana 🌱`;
+  else msg = 'Seu primeiro registro do dia — que bom te ver aqui 🌿';
+
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+// ── CARTAS PARA O FUTURO ──────────────────────────────
+let cartasCache = [];
+
+async function carregarCartas() {
+  const token = sessionStorage.getItem('re-token');
+  if (!token) return;
+  try {
+    const url = `${APPS_SCRIPT_URL}?acao=getCartas&token=${encodeURIComponent(token)}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.ok) return;
+    cartasCache = data.cartas || [];
+    renderCartasLanding(cartasCache, data.totalRegistros || 0);
+  } catch(e) {}
+}
+
+function renderCartasLanding(cartas, totalRegistros) {
+  const el = document.getElementById('landing-letters');
+  if (!el || !cartas.length) return;
+  const prontas = cartas.filter(c => (totalRegistros - c.registrosNaEscrita) >= c.meta && c.status !== 'apagada');
+  const emAndamento = cartas.filter(c => (totalRegistros - c.registrosNaEscrita) < c.meta && c.status !== 'apagada');
+  let html = '';
+  prontas.forEach(c => {
+    html += `<div class="letter-ready-card" onclick="abrirCarta('${c.id}')">
+      <span class="letter-envelope">✉️</span>
+      <div class="letter-ready-title">Você tem uma carta esperando por você</div>
+      <div class="letter-ready-sub">Escrita em ${c.dataCriacao} · Toque para abrir</div>
+    </div>`;
+  });
+  emAndamento.forEach(c => {
+    const feitos = totalRegistros - c.registrosNaEscrita;
+    const faltam = Math.max(0, c.meta - feitos);
+    const pct = Math.min(100, Math.round((feitos / c.meta) * 100));
+    html += `<div class="letter-progress-card">
+      <div class="letter-progress-title">✉️ Carta para você mesma</div>
+      <div class="letter-progress-sub">Faltam <strong>${faltam}</strong> registro${faltam !== 1 ? 's' : ''} para abrir · Escrita em ${c.dataCriacao}</div>
+      <div class="letter-progress-bar-wrap">
+        <div class="letter-progress-bar-fill" style="width:${pct}%"></div>
+      </div>
+    </div>`;
+  });
+  if (html) { el.innerHTML = html; el.style.display = 'block'; }
+}
+
+function abrirCarta(id) {
+  const carta = cartasCache.find(c => c.id === id);
+  if (!carta) return;
+  document.getElementById('screen-landing').classList.remove('active');
+  document.getElementById('screen-letter-read').classList.add('active');
+  renderLetterRead(carta);
+}
+
+function closeLetterRead() {
+  document.getElementById('screen-letter-read').classList.remove('active');
+  document.getElementById('screen-landing').classList.add('active');
+}
+
+function renderLetterRead(carta) {
+  const c = document.getElementById('letter-read-body');
+  c.innerHTML = `
+    <div class="letter-read-content">
+      <div class="letter-read-meta">Escrita em ${carta.dataCriacao} · Para você, de você</div>
+      <div class="letter-read-text">${carta.texto}</div>
+    </div>
+    <div class="letter-read-actions">
+      <button class="btn-calma" onclick="guardarCarta('${carta.id}')">💚 Guardar para reler sempre</button>
+      <button class="btn-ajuda" style="border-color:var(--text-tertiary);color:var(--text-tertiary);margin-top:8px" onclick="apagarCarta('${carta.id}')">🗑 Já li, pode apagar</button>
+    </div>
+  `;
+}
+
+async function guardarCarta(id) {
+  await atualizarStatusCarta(id, 'guardada');
+  closeLetterRead();
+  carregarCartas();
+}
+
+async function apagarCarta(id) {
+  if (!confirm('Tem certeza? A carta será apagada permanentemente.')) return;
+  await atualizarStatusCarta(id, 'apagada');
+  cartasCache = cartasCache.filter(c => c.id !== id);
+  closeLetterRead();
+  const el = document.getElementById('landing-letters');
+  if (el) el.innerHTML = '';
+  renderCartasLanding(cartasCache, 0);
+}
+
+async function atualizarStatusCarta(id, status) {
+  const token = sessionStorage.getItem('re-token');
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ acao: 'atualizarCarta', token, id, status })
+    });
+  } catch(e) {}
+}
+
+// ── EXERCÍCIO 4: CARTA PARA O FUTURO ─────────────────
+let cartaMeta = null;
+
+function renderLetter(c) {
+  document.getElementById('exercise-detail-title').textContent = 'Carta para o Futuro';
+  cartaMeta = null;
+  c.innerHTML = `
+    <div class="letter-write-wrap">
+      <p style="font-family:'Lora',serif;font-size:17px;font-weight:400;color:var(--text-primary);line-height:1.5;margin-bottom:6px;">Escreva para você mesma.</p>
+      <p style="font-size:13px;color:var(--text-secondary);font-weight:300;line-height:1.6;margin-bottom:20px;">Essa carta ficará guardada e só você poderá ler — quando estiver pronta.</p>
+      <textarea class="letter-textarea" id="letter-text" placeholder="Querida eu...&#10;&#10;Hoje eu me sinto..."></textarea>
+      <p style="font-size:12px;color:var(--text-secondary);font-family:'Poppins',sans-serif;font-weight:300;margin-bottom:10px;">Quando você quer poder abrir essa carta?</p>
+      <div class="letter-goal-opts">
+        <button class="letter-goal-btn" onclick="selectCartaMeta(15, this)">15<br><span style="font-size:10px;opacity:0.6">registros</span></button>
+        <button class="letter-goal-btn" onclick="selectCartaMeta(30, this)">30<br><span style="font-size:10px;opacity:0.6">registros</span></button>
+        <button class="letter-goal-btn" onclick="selectCartaMeta(60, this)">60<br><span style="font-size:10px;opacity:0.6">registros</span></button>
+      </div>
+      <button class="btn-calma" id="letter-save-btn" style="opacity:0.4;cursor:not-allowed;margin-bottom:10px" disabled onclick="salvarCarta()">
+        💚 Guardar minha carta
+      </button>
+      <button class="btn-ajuda" onclick="abrirWhatsApp()">💬 Preciso de mais ajuda</button>
+    </div>
+  `;
+  document.getElementById('letter-text').addEventListener('input', checkCartaReady);
+}
+
+function selectCartaMeta(meta, btn) {
+  cartaMeta = meta;
+  document.querySelectorAll('.letter-goal-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  checkCartaReady();
+}
+
+function checkCartaReady() {
+  const txt = (document.getElementById('letter-text')?.value || '').trim();
+  const btn = document.getElementById('letter-save-btn');
+  if (!btn) return;
+  const ok = txt.length > 10 && cartaMeta;
+  btn.disabled = !ok;
+  btn.style.opacity = ok ? '1' : '0.4';
+  btn.style.cursor = ok ? 'pointer' : 'not-allowed';
+}
+
+async function salvarCarta() {
+  const token = sessionStorage.getItem('re-token');
+  const texto = document.getElementById('letter-text')?.value?.trim();
+  if (!token || !texto || !cartaMeta) return;
+  const btn = document.getElementById('letter-save-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
+  try {
+    const hist = JSON.parse(localStorage.getItem('re-history-' + token) || '[]');
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ acao: 'salvarCarta', token, texto, meta: cartaMeta, registrosNaEscrita: hist.length })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      const c = document.getElementById('exercise-detail-content');
+      c.innerHTML = `
+        <div style="text-align:center;padding-top:20px;">
+          <div style="font-size:52px;margin-bottom:20px;">✉️</div>
+          <p style="font-family:'Lora',serif;font-size:20px;font-weight:400;color:var(--text-primary);line-height:1.4;margin-bottom:10px;">Sua carta foi guardada com carinho.</p>
+          <p style="font-size:13px;color:var(--text-secondary);font-weight:300;line-height:1.6;margin-bottom:36px;">Ela vai aparecer para você depois de <strong style="color:var(--green)">${cartaMeta} registros</strong>. Até lá, cuide-se. 🌿</p>
+          <div class="exercise-final-btns">
+            <button class="btn-calma" onclick="exerciseDone()">✓ Voltar ao início</button>
+            <button class="btn-ajuda" onclick="abrirWhatsApp()">💬 Preciso de mais ajuda</button>
+          </div>
+        </div>`;
+    }
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.textContent = '💚 Guardar minha carta'; }
+  }
 }
 </script>
 </body>
