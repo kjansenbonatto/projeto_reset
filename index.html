@@ -1217,25 +1217,25 @@ body.theme-light .pwa-install-btn {
   padding:40px 24px;
   font-family:'Poppins',sans-serif;
   background: var(--bg-login);
-  color:#F4EDE0;
+  color:var(--text-primary);
   position:relative;
   overflow:hidden;
 ">
   <div style="position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg viewBox=%220 0 256 256%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noise%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noise)%22 opacity=%220.04%22/%3E%3C/svg%3E');pointer-events:none;opacity:0.5;"></div>
   <p style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#E8601A;font-weight:500;margin-bottom:20px;position:relative;z-index:1;">Acesso exclusivo</p>
-  <h1 style="font-family:'Lora',serif;font-size:clamp(32px,7vw,48px);font-weight:400;line-height:1.15;max-width:380px;margin-bottom:8px;color:#ffffff;position:relative;z-index:1;">
+  <h1 style="font-family:'Lora',serif;font-size:clamp(32px,7vw,48px);font-weight:400;line-height:1.15;max-width:380px;margin-bottom:8px;color:var(--text-primary);position:relative;z-index:1;">
     Reset<br><em style="color:#E8601A;font-style:italic">Emocional</em>
   </h1>
-  <p style="font-size:12px;color:#ffffff;letter-spacing:1.5px;font-family:'Poppins',sans-serif;font-weight:300;margin-bottom:24px;position:relative;z-index:1;">por Kamila Bonatto</p>
-  <p style="font-size:13px;color:#ffffff;line-height:1.7;max-width:300px;font-weight:300;margin-bottom:40px;position:relative;z-index:1;">Digite a senha que você recebeu para acessar a ferramenta.</p>
+  <p style="font-size:12px;color:var(--text-secondary);letter-spacing:1.5px;font-family:'Poppins',sans-serif;font-weight:300;margin-bottom:24px;position:relative;z-index:1;">por Kamila Bonatto</p>
+  <p style="font-size:13px;color:var(--text-secondary);line-height:1.7;max-width:300px;font-weight:300;margin-bottom:40px;position:relative;z-index:1;">Digite a senha que você recebeu para acessar a ferramenta.</p>
   <div style="width:100%;max-width:320px;margin-bottom:12px;position:relative;z-index:1;">
     <input id="campo-senha" type="password" placeholder="Sua senha de acesso"
-      style="width:100%;box-sizing:border-box;padding:15px 50px 15px 20px;border-radius:14px;border:1.5px solid rgba(244,237,224,0.2);background:rgba(244,237,224,0.08);font-family:'Poppins',sans-serif;font-size:14px;color:#ffffff;outline:none;transition:border 0.2s;backdrop-filter:blur(4px);"
+      style="width:100%;box-sizing:border-box;padding:15px 50px 15px 20px;border-radius:14px;border:1.5px solid var(--border-input);background:var(--bg-input);font-family:'Poppins',sans-serif;font-size:14px;color:var(--text-primary);outline:none;transition:border 0.2s;"
       onkeydown="if(event.key==='Enter') tentarAcesso()"
       onfocus="this.style.border='1.5px solid #E8601A'"
-      onblur="this.style.border='1.5px solid rgba(244,237,224,0.2)'"
+      onblur="this.style.border='1.5px solid var(--border-input)'"
     />
-    <span onclick="toggleSenha()" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:18px;user-select:none;color:#ffffff;" id="olho">👁</span>
+    <span onclick="toggleSenha()" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:18px;user-select:none;color:var(--text-secondary);" id="olho">👁</span>
   </div>
   <button id="btn-acessar" onclick="tentarAcesso()" style="width:100%;max-width:320px;padding:15px;border-radius:14px;border:none;background:linear-gradient(135deg,#F0904A,#E8601A);color:#ffffff;font-family:'Poppins',sans-serif;font-size:14px;font-weight:500;cursor:pointer;letter-spacing:0.5px;box-shadow:0 8px 24px rgba(232,96,26,0.3);transition:opacity 0.2s;position:relative;z-index:1;" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">Acessar</button>
   <p id="erro-msg" style="font-size:12px;color:#E8601A;margin-top:14px;min-height:18px;font-weight:400;position:relative;z-index:1;"></p>
