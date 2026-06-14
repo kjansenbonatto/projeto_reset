@@ -787,7 +787,7 @@ textarea::placeholder { color: var(--text-tertiary); }
   right: 20px;
   z-index: 10;
   background: transparent;
-  border: 1.5px solid rgba(255,255,255,0.2);
+  border: 1.5px solid var(--border-subtle);
   border-radius: 100px;
   width: 40px;
   height: 40px;
@@ -2336,14 +2336,14 @@ function verificarRascunhoLanding() {
       <span style="font-size:22px;flex-shrink:0">📝</span>
       <div>
         <p style="font-size:12px;font-weight:600;color:#E8601A;font-family:'Poppins',sans-serif;margin-bottom:2px">Registro em andamento${emotionLabel}</p>
-        <p style="font-size:11px;color:rgba(255,255,255,0.55);font-family:'Poppins',sans-serif;font-weight:300;line-height:1.5">Você tinha um registro em andamento. Clique em "Continuar" para retomar.</p>
+        <p style="font-size:11px;color:var(--text-secondary);font-family:'Poppins',sans-serif;font-weight:300;line-height:1.5">Você tinha um registro em andamento. Clique em "Continuar" para retomar.</p>
       </div>
     `;
     btn.textContent = 'Continuar registro →';
     btn.insertAdjacentElement('beforebegin', banner);
     const discardBtn = document.createElement('button');
     discardBtn.id = 'draft-discard';
-    discardBtn.style.cssText = `font-size:11px;color:rgba(255,255,255,0.3);background:transparent;border:none;cursor:pointer;font-family:'Poppins',sans-serif;padding:4px 0;margin-bottom:12px;text-decoration:underline;position:relative;z-index:1;`;
+    discardBtn.style.cssText = `font-size:11px;color:var(--text-tertiary);background:transparent;border:none;cursor:pointer;font-family:'Poppins',sans-serif;padding:4px 0;margin-bottom:12px;text-decoration:underline;position:relative;z-index:1;`;
     discardBtn.textContent = 'Descartar e começar do zero';
     discardBtn.onclick = function() {
       clearStateCache();
@@ -2576,7 +2576,7 @@ function renderDiagIntro(c) {
       <span style="font-size:44px;display:block;margin-bottom:18px">🔍</span>
       <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:${accent()};font-family:'Poppins',sans-serif;font-weight:500;margin-bottom:12px">Diagnóstico emocional</p>
       <h2 class="card-title" style="text-align:center;font-size:20px">Agora vamos mapear o que essa emoção está revelando sobre você</h2>
-      <p class="card-sub" style="text-align:center;margin-top:10px;margin-bottom:28px">Responda com honestidade — não existe certo ou errado aqui. São <strong style="color:rgba(255,255,255,0.75)">5 blocos rápidos</strong> de perguntas e, ao final, você vai entender com mais clareza qual necessidade está em foco.</p>
+      <p class="card-sub" style="text-align:center;margin-top:10px;margin-bottom:28px">Responda com honestidade — não existe certo ou errado aqui. São <strong style="color:var(--text-primary)">5 blocos rápidos</strong> de perguntas e, ao final, você vai entender com mais clareza qual necessidade está em foco.</p>
     </div>
     <div class="nav-row">
       <button class="btn-back" onclick="goTo(${prevStep})">← Voltar</button>
@@ -2628,7 +2628,7 @@ function renderDiagGroup(c, groupIdx) {
   c.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
       <p style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:${accent()};font-family:'Poppins',sans-serif;font-weight:500">${g.icon} ${g.label}</p>
-      <p style="font-size:10px;color:rgba(255,255,255,0.3);font-family:'Poppins',sans-serif">Bloco ${groupIdx+1} de ${totalGroups}</p>
+      <p style="font-size:10px;color:var(--text-tertiary);font-family:'Poppins',sans-serif">Bloco ${groupIdx+1} de ${totalGroups}</p>
     </div>
     <div style="height:3px;background:rgba(255,255,255,0.07);border-radius:4px;margin-bottom:22px;overflow:hidden">
       <div style="height:100%;width:${((groupIdx+1)/totalGroups)*100}%;background:${accent()};border-radius:4px;transition:width 0.4s"></div>
@@ -2717,7 +2717,7 @@ function selectNeedChoice(nk) {
       btn.style.borderColor = ac;
       btn.style.background = bgSel;
     } else {
-      btn.style.borderColor = 'rgba(255,255,255,0.12)';
+      btn.style.borderColor = 'var(--border-input)';
       btn.style.background = 'transparent';
     }
   });
@@ -2761,13 +2761,13 @@ function renderNeed(c) {
   ` : '';
 
   const firstLabel = isPos
-    ? `<p class="card-sub" style="margin-bottom:8px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.4)">Necessidade mais suprida agora ✨</p>`
-    : `<p class="card-sub" style="margin-bottom:8px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.4)">Sua maior necessidade atual</p>`;
+    ? `<p class="card-sub" style="margin-bottom:8px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text-tertiary)">Necessidade mais suprida agora ✨</p>`
+    : `<p class="card-sub" style="margin-bottom:8px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text-tertiary)">Sua maior necessidade atual</p>`;
 
   // Mensagem acolhedora que identifica a necessidade e prepara para as ações
   const msgHtml = msg ? `
     <div style="background:${isPos ? 'rgba(74,94,66,0.15)' : 'rgba(232,96,26,0.1)'};border-left:3px solid ${accent()};border-radius:10px;padding:14px 16px;margin-bottom:20px">
-      <p style="font-size:13.5px;color:rgba(255,255,255,0.85);font-family:'Poppins',sans-serif;font-weight:300;line-height:1.65;font-style:italic">${msg}</p>
+      <p style="font-size:13.5px;color:var(--text-primary);font-family:'Poppins',sans-serif;font-weight:300;line-height:1.65;font-style:italic">${msg}</p>
     </div>` : '';
 
   const backStep = state.chosenNeed ? 4.7 : 4.5;
@@ -2808,13 +2808,13 @@ function renderPastReread(c) {
     <h2 class="card-title">Essa emoção e essa necessidade já apareceram juntas antes.</h2>
     <p class="card-sub" style="margin-bottom:20px">Perceber esses padrões é uma forma poderosa de se conhecer — e de agir.</p>
 
-    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:18px 20px;margin-bottom:20px">
-      <p style="font-size:13px;color:rgba(255,255,255,0.75);font-family:'Poppins',sans-serif;font-weight:300;line-height:1.7;margin-bottom:10px">
-        ${e.date ? `Em <strong style="color:rgba(255,255,255,0.92);font-weight:500">${e.date}</strong>, você` : 'Você'} se sentiu assim e escolheu:
+    <div style="background:var(--diag-wrap-bg);border:1px solid var(--border-subtle);border-radius:14px;padding:18px 20px;margin-bottom:20px">
+      <p style="font-size:13px;color:var(--text-secondary);font-family:'Poppins',sans-serif;font-weight:300;line-height:1.7;margin-bottom:10px">
+        ${e.date ? `Em <strong style="color:var(--text-primary);font-weight:500">${e.date}</strong>, você` : 'Você'} se sentiu assim e escolheu:
       </p>
-      <p style="font-size:15px;color:#fff;font-family:'Lora',serif;line-height:1.5;margin-bottom:12px">"${e.action}"</p>
-      <p style="font-size:12px;color:rgba(255,255,255,0.55);font-family:'Poppins',sans-serif;font-weight:300">
-        Você avaliou essa ação com ${estrelas} <strong style="color:rgba(255,255,255,0.85)">${e.rating}/5</strong>
+      <p style="font-size:15px;color:var(--text-primary);font-family:'Lora',serif;line-height:1.5;margin-bottom:12px">"${e.action}"</p>
+      <p style="font-size:12px;color:var(--text-secondary);font-family:'Poppins',sans-serif;font-weight:300">
+        Você avaliou essa ação com ${estrelas} <strong style="color:var(--text-primary)">${e.rating}/5</strong>
       </p>
     </div>
 
@@ -2848,7 +2848,7 @@ function badgeComunidade(nk, textoAcao) {
   const estrelas = '⭐'.repeat(Math.round(item.media));
   return `<span style="
     display:inline-block;margin-top:6px;
-    font-size:11px;color:rgba(255,255,255,0.55);
+    font-size:11px;color:var(--text-secondary);
     font-family:'Poppins',sans-serif;font-weight:300;
   ">${estrelas} ${item.media.toFixed(1)} · escolhida ${item.vezes}x pela comunidade</span>`;
 }
@@ -2895,7 +2895,7 @@ function renderAction(c) {
     `).join('');
     const label2 = isPos ? `${n2.icon} Para celebrar ${nk2}` : `${n2.icon} Para ${nk2}`;
     secondActionsHtml = `
-      <p class="card-sub" style="margin-top:18px;margin-bottom:8px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.4)">${label2}</p>
+      <p class="card-sub" style="margin-top:18px;margin-bottom:8px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text-tertiary)">${label2}</p>
       ${btns2}
     `;
   }
@@ -3012,7 +3012,7 @@ ${(() => {
     if (bloqueado) {
       return `<div style="background:rgba(232,96,26,0.1);border:1.5px solid rgba(232,96,26,0.3);border-radius:14px;padding:16px 18px;margin-bottom:12px;text-align:center">
         <p style="font-size:13px;color:#E8601A;font-family:'Poppins',sans-serif;font-weight:500;margin-bottom:4px">Avalie sua ação primeiro ⭐</p>
-        <p style="font-size:12px;color:rgba(255,255,255,0.5);font-family:'Poppins',sans-serif;font-weight:300">Vá em Minha semana e dê uma nota antes de fazer um novo registro.</p>
+        <p style="font-size:12px;color:var(--text-secondary);font-family:'Poppins',sans-serif;font-weight:300">Vá em Minha semana e dê uma nota antes de fazer um novo registro.</p>
       </div>
       <button class="btn-restart" style="border-color:rgba(255,255,255,0.15);color:rgba(255,255,255,0.25);cursor:not-allowed" disabled>
         Novo registro
@@ -3022,7 +3022,7 @@ ${(() => {
       Novo registro
     </button>`;
   })()}
-    <button onclick="openWeek()" style="width:100%;background:transparent;border:2px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px;font-size:13px;cursor:pointer;font-family:'Poppins',sans-serif;color:rgba(255,255,255,0.5);transition:all 0.15s" onmouseover="this.style.borderColor='rgba(255,255,255,0.35)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)'">
+    <button onclick="openWeek()" style="width:100%;background:transparent;border:2px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px;font-size:13px;cursor:pointer;font-family:'Poppins',sans-serif;color:var(--text-secondary);transition:all 0.15s" onmouseover="this.style.borderColor='rgba(255,255,255,0.35)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)'">
       📅 Ver minha semana
     </button>
   `;
@@ -3127,14 +3127,14 @@ function renderWeek() {
       width:100%;max-width:500px;
       margin-bottom:16px;
       padding:16px 20px;
-      background:#1e1e1e;
+      background:var(--diag-wrap-bg);
       border-radius:14px;
-      border:1px solid rgba(255,255,255,0.07);
+      border:1px solid var(--border-subtle);
     ">
-      <p style="font-family:'Lora',serif;font-size:15px;color:#ffffff;font-weight:400;margin-bottom:6px;line-height:1.4;">
+      <p style="font-family:'Lora',serif;font-size:15px;color:var(--text-primary);font-weight:400;margin-bottom:6px;line-height:1.4;">
         Classifique suas ações ⭐
       </p>
-      <p style="font-family:'Poppins',sans-serif;font-size:12px;color:rgba(255,255,255,0.4);font-weight:300;line-height:1.6;">
+      <p style="font-family:'Poppins',sans-serif;font-size:12px;color:var(--text-secondary);font-weight:300;line-height:1.6;">
         Avalie cada ação que você escolheu fazer. Com o tempo, você vai perceber o que realmente funciona pra você — e isso é muito valioso.
       </p>
     </div>
@@ -3508,7 +3508,6 @@ function renderSensoryStep(c) {
       <button class="btn-calma" style="margin-bottom:10px" onclick="sensoryNext()">
         Já nomeei as ${step.count} →
       </button>
-      <button class="btn-ajuda" onclick="abrirWhatsApp()">💬 Preciso de mais ajuda</button>
     </div>
   `;
 }
@@ -3567,7 +3566,6 @@ function renderColdChoice(c) {
     <button class="btn-calma" id="cold-start-btn" style="margin-top:8px;margin-bottom:10px;opacity:0.4;cursor:not-allowed;" disabled onclick="startColdTimer()">
       Comecei → iniciar timer
     </button>
-    <button class="btn-ajuda" onclick="abrirWhatsApp()">💬 Preciso de mais ajuda</button>
   `;
 }
 
