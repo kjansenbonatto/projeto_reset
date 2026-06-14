@@ -3295,10 +3295,35 @@ async function installPWA() {
   }
 }
 
-// Register service worker
+// Register service worker com atualização automática
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js').catch(() => {});
+    navigator.serviceWorker.register('service-worker.js').then(reg => {
+
+      // Verifica atualização a cada vez que o app abre
+      reg.update();
+
+      // Quando uma nova versão está esperando — ativa e recarrega
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            // Nova versão pronta — manda ativar e recarrega
+            newWorker.postMessage('skipWaiting');
+          }
+        });
+      });
+
+    }).catch(() => {});
+
+    // Quando o SW trocou — recarrega a página automaticamente
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!refreshing) {
+        refreshing = true;
+        window.location.reload();
+      }
+    });
   });
 }
 
