@@ -1761,7 +1761,7 @@ body.theme-light .letter-progress-card { background: rgba(35,32,26,0.04); }
 // ══════════════════════════════════════════════════════
 
 // ── URL DO APPS SCRIPT ───────────────────────────────
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwgQXU-Zh2dSgNsrFCaiTI5B7zP31CAxH19z3SIrsOa7d55IXr8dMrP-PQMltj2ehc/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxiDlLytl7JX3GNEKouw6U_PdXyEsRMWl8dLtw9P_q_Pel_LikQLbqHExzArqM8V4Tr/exec";
 
 // ── CACHE DE RANKING ─────────────────────────────────
 let rankingComunidade = {};
@@ -4235,10 +4235,11 @@ function closeLetterRead() {
 
 function renderLetterRead(carta) {
   const c = document.getElementById('letter-read-body');
+  const textoDecod = decodificarCarta(carta.texto);
   c.innerHTML = `
     <div class="letter-read-content">
       <div class="letter-read-meta">Escrita em ${carta.dataCriacao} · Para você, de você</div>
-      <div class="letter-read-text">${carta.texto}</div>
+      <div class="letter-read-text">${textoDecod}</div>
     </div>
     <div class="letter-read-actions">
       <button class="btn-calma" onclick="guardarCarta('${carta.id}')">💚 Guardar para reler sempre</button>
@@ -4271,6 +4272,16 @@ async function atualizarStatusCarta(id, status) {
       body: JSON.stringify({ acao: 'atualizarCarta', token, id, status })
     });
   } catch(e) {}
+}
+
+// ── CRIPTOGRAFIA DA CARTA (Base64) ───────────────────
+function codificarCarta(texto) {
+  try { return btoa(unescape(encodeURIComponent(texto))); }
+  catch(e) { return texto; }
+}
+function decodificarCarta(texto) {
+  try { return decodeURIComponent(escape(atob(texto))); }
+  catch(e) { return texto; }
 }
 
 // ── EXERCÍCIO 4: CARTA PARA O FUTURO ─────────────────
@@ -4326,7 +4337,7 @@ async function salvarCarta() {
     const hist = JSON.parse(localStorage.getItem('re-history-' + token) || '[]');
     const res = await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
-      body: JSON.stringify({ acao: 'salvarCarta', token, texto, meta: cartaMeta, registrosNaEscrita: hist.length })
+      body: JSON.stringify({ acao: 'salvarCarta', token, texto: codificarCarta(texto), meta: cartaMeta, registrosNaEscrita: hist.length })
     });
     const data = await res.json();
     if (data.ok) {
