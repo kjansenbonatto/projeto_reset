@@ -4031,11 +4031,13 @@ if ('serviceWorker' in navigator) {
 
     }).catch(() => {});
 
-    // Quando o SW trocou — recarrega a página automaticamente
-    let refreshing = false;
+    // Quando o SW trocou — recarrega a página automaticamente, no máximo
+    // 1 vez por sessão (CORRIGIDO: antes usava uma variável que resetava
+    // a cada carga, então se o navegador detectasse troca de versão
+    // repetidamente, a página entrava num loop infinito de recarregamento)
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (!refreshing) {
-        refreshing = true;
+      if (sessionStorage.getItem('re-sw-reloaded') !== '1') {
+        sessionStorage.setItem('re-sw-reloaded', '1');
         window.location.reload();
       }
     });
