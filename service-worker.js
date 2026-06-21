@@ -5,16 +5,15 @@
 //  arquivo, pra notificações push funcionarem dentro do mesmo
 //  arquivo que já cuida do cache/atualização automática.
 //
-//  Nota: a versão do cache (CACHE_NAME) continua "v5" por enquanto,
-//  como combinamos — só sobe pra "v6" junto com a entrega do HTML,
-//  no final, pra todo mundo receber uma atualização só.
+//  NOVO: versão do cache subiu de "v5" pra "v6" junto com esta
+//  entrega do HTML — todo mundo recebe a atualização de uma vez.
 // ════════════════════════════════════════════════════════
 
 // NOVO: SDK de push do OneSignal (precisa ficar no topo do arquivo)
 importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
 
 // Mude esta versão a cada deploy para forçar atualização automática
-const CACHE_NAME = 'reset-emocional-v5';
+const CACHE_NAME = 'reset-emocional-v6';
 const ASSETS = [
   '/projeto_reset/',
   '/projeto_reset/index.html',
