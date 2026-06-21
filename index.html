@@ -1567,7 +1567,231 @@ body.theme-light .letter-progress-card { background: rgba(35,32,26,0.04); }
 }
 .letter-textarea:focus { border-color: var(--green); }
 .letter-textarea::placeholder { color: var(--text-tertiary); font-style: italic; }
+/* ══════════════════════════════════════════════════════
+   NOVO · Engrenagem de Configurações, banner de horário,
+   onboarding, seletor de horário, aviso iPhone, tela de
+   Configurações e variante verde-musgo do calendário.
+══════════════════════════════════════════════════════ */
+
+/* ── Botão de Configurações (ao lado do tema) ── */
+.settings-toggle {
+  position: absolute;
+  top: 20px;
+  right: 68px;
+  z-index: 10;
+  background: transparent;
+  border: 1.5px solid var(--border-subtle);
+  border-radius: 100px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+  backdrop-filter: blur(4px);
+}
+body.theme-light .settings-toggle { border-color: rgba(35,32,26,0.2); }
+.settings-toggle:hover { transform: scale(1.1) rotate(20deg); }
+
+/* ── Banner "ainda não escolheu horário" ── */
+.landing-banner-horario {
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto 16px;
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: rgba(232,96,26,0.08);
+  border: 1px solid rgba(232,96,26,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  text-align: left;
+  font-family: 'Poppins', sans-serif;
+  transition: all 0.2s;
+  position: relative;
+  z-index: 1;
+}
+.landing-banner-horario:hover { border-color: var(--orange); transform: translateY(-2px); }
+.landing-banner-horario-texto { font-size: 12px; color: var(--landing-desc-color); line-height: 1.4; }
+.landing-banner-horario-seta { font-size: 16px; color: var(--orange); flex-shrink: 0; }
+
+/* ── Telas de Onboarding ── */
+#screen-onboarding-intro, #screen-onboarding-horario {
+  min-height: 100vh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  text-align: center;
+  background: var(--bg-landing);
+}
+.onboarding-badge {
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--orange);
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+.onboarding-title {
+  font-family: 'Lora', serif;
+  font-size: clamp(26px, 7vw, 34px);
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--landing-title-color);
+  max-width: 380px;
+  margin-bottom: 20px;
+}
+.onboarding-text {
+  font-size: 14px;
+  color: var(--landing-desc-color);
+  line-height: 1.7;
+  max-width: 360px;
+  margin-bottom: 36px;
+  font-weight: 300;
+}
+.onboarding-skip {
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  text-decoration: underline;
+}
+
+/* ── Aviso iPhone não instalado ── */
+.ios-warning-box {
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto 24px;
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: rgba(200,169,110,0.14);
+  border: 1px solid rgba(200,169,110,0.4);
+  text-align: left;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* ── Seletor de horário (estilo despertador) ── */
+.time-picker-wrap {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 180px;
+  margin: 8px 0 28px;
+  gap: 4px;
+}
+.time-picker-col {
+  height: 180px;
+  width: 70px;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.time-picker-col::-webkit-scrollbar { display: none; }
+.time-picker-item {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Lora', serif;
+  font-size: 20px;
+  color: var(--text-tertiary);
+  scroll-snap-align: center;
+  transition: color 0.15s, font-size 0.15s;
+}
+.time-picker-item.selected {
+  color: var(--orange);
+  font-weight: 600;
+  font-size: 26px;
+}
+.time-picker-pad { height: 68px; flex-shrink: 0; }
+.time-picker-sep {
+  font-family: 'Lora', serif;
+  font-size: 22px;
+  color: var(--landing-title-color);
+  padding: 0 4px;
+  position: relative;
+  z-index: 1;
+}
+.time-picker-highlight {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 168px;
+  height: 44px;
+  background: var(--orange-pale);
+  opacity: 0.3;
+  border-radius: 10px;
+  pointer-events: none;
+  z-index: 0;
+}
+body.theme-light .time-picker-highlight { opacity: 0.5; }
+
+/* ── Tela de Configurações ── */
+#screen-configuracoes {
+  min-height: 100vh;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 16px 80px;
+  background: var(--bg-main);
+}
+.config-section { width: 100%; max-width: 500px; margin-bottom: 28px; }
+.config-label {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+.config-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  margin-bottom: 10px;
+}
+.config-row-text { font-size: 14px; color: var(--text-primary); font-family: 'Poppins', sans-serif; }
+.config-row-sub { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+/* ── Calendário: variante verde-musgo (eventos que não são sessão) ── */
+.calendar-next-event.evento-outro { border-color: var(--green); background: rgba(74,94,66,0.08); }
+.calendar-next-event.evento-outro::before { background: linear-gradient(90deg, #4A5E42, #6B8060); }
+.calendar-next-event.evento-outro:hover { box-shadow: 0 8px 24px rgba(74,94,66,0.2); }
+.calendar-next-event.evento-outro .cal-next-label { color: var(--green); }
+.calendar-next-event.evento-outro .cal-next-link { color: var(--green); background: rgba(74,94,66,0.1); border-color: rgba(74,94,66,0.3); }
+.calendar-next-event.evento-outro .cal-next-link:hover { background: var(--green); }
+.cal-next-countdown { font-size: 10px; color: var(--landing-desc-color); opacity: 0.5; font-family: 'Poppins', sans-serif; font-weight: 300; margin-top: -2px; margin-bottom: 8px; }
+
+.cal-card.evento-outro:hover { border-color: var(--green); }
+.cal-card.evento-outro.today { border-color: var(--green); animation: calPulseGreen 2s ease-in-out infinite, fadeUp 0.4s ease forwards; }
+.cal-card.evento-outro .cal-date-box { background: rgba(74,94,66,0.12); }
+.cal-card.evento-outro .cal-day, .cal-card.evento-outro .cal-month { color: var(--green); }
+@keyframes calPulseGreen {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(74,94,66,0); }
+  50% { box-shadow: 0 0 0 4px rgba(74,94,66,0.15); }
+}
 </style>
+<!-- NOVO: SDK de notificações push do OneSignal -->
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 </head>
 <body>
 
@@ -1613,6 +1837,9 @@ body.theme-light .letter-progress-card { background: rgba(35,32,26,0.04); }
 <div class="screen" id="screen-landing">
   <div class="landing-lines"><span></span><span></span><span></span></div>
 
+  <!-- Botão de Configurações (NOVO) -->
+  <button class="settings-toggle" id="settings-toggle-btn" onclick="abrirConfiguracoes()" title="Configurações">⚙️</button>
+
   <!-- Botão de tema -->
   <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" title="Alternar tema">🌙</button>
 
@@ -1622,7 +1849,15 @@ body.theme-light .letter-progress-card { background: rgba(35,32,26,0.04); }
   <p class="landing-desc">Um espaço só seu para nomear o que sente, entender o que precisa e escolher uma ação de cuidado — todos os dias.</p>
   <button class="landing-btn" onclick="startDiary()">Começar meu registro →</button>
   <button class="landing-btn-week" style="margin-bottom:10px" onclick="openExercises()">⏸️ Momento de reset</button>
+  <button class="landing-btn-week" style="margin-bottom:10px" onclick="openAulas()">🎥 Aulas Gravadas</button>
+  <button class="landing-btn-week" style="margin-bottom:10px" onclick="openComunidade()">💬 Comunidade Emocionadas</button>
   <button class="landing-btn-week" onclick="openWeek()">📅 Ver minha semana</button>
+
+  <!-- Banner: ainda não escolheu horário do lembrete (NOVO) -->
+  <div class="landing-banner-horario" id="landing-banner-horario" style="display:none" onclick="abrirOnboardingHorarioDireto()">
+    <span class="landing-banner-horario-texto" id="landing-banner-horario-texto">Ainda não escolheu seu horário de cuidado? Escolher agora</span>
+    <span class="landing-banner-horario-seta">→</span>
+  </div>
 
   <!-- Cartas prontas para abrir -->
   <div class="letter-cards-section" id="landing-letters" style="display:none"></div>
@@ -1638,6 +1873,66 @@ body.theme-light .letter-progress-card { background: rgba(35,32,26,0.04); }
   </div>
 
   <p class="landing-footer">Kamila Bonatto · @eukamilabonatto</p>
+</div>
+
+<!-- ══ ONBOARDING · INTRODUÇÃO (NOVO) ══ -->
+<div class="screen" id="screen-onboarding-intro">
+  <p class="onboarding-badge">Antes de começar</p>
+  <h1 class="onboarding-title">Isso não é só mais um app de bem-estar</h1>
+  <p class="onboarding-text">O Reset Emocional é um processo — não um curativo rápido. Cada registro que você faz é um passo pra se conhecer melhor: entender o que você sente, de onde vem isso, e o que você realmente precisa. Quanto mais constante você for, mais ele te mostra sobre você mesma.</p>
+  <button class="landing-btn" onclick="avancarOnboarding()">Entendi, continuar →</button>
+</div>
+
+<!-- ══ ONBOARDING · ESCOLHER HORÁRIO (NOVO) ══ -->
+<div class="screen" id="screen-onboarding-horario">
+  <p class="onboarding-badge">Último passo</p>
+  <h1 class="onboarding-title">Escolha o seu melhor horário</h1>
+  <p class="onboarding-text">Pra esse processo funcionar, ele precisa de um espacinho na sua rotina. Escolha um horário em que você consiga parar por alguns minutos, com calma, só pra você.</p>
+
+  <div class="ios-warning-box" id="onboarding-ios-warning" style="display:none">📲 Você está no iPhone — pra receber a notificação, primeiro adicione esse app à tela de início (toque em Compartilhar → Adicionar à Tela de Início).</div>
+
+  <div class="time-picker-wrap">
+    <div class="time-picker-highlight"></div>
+    <div class="time-picker-col" id="picker-hours-onboarding"></div>
+    <div class="time-picker-sep">:</div>
+    <div class="time-picker-col" id="picker-minutes-onboarding"></div>
+  </div>
+
+  <button class="landing-btn" id="onboarding-horario-confirmar-btn" onclick="confirmarHorarioOnboarding()">Confirmar horário</button>
+  <button class="onboarding-skip" onclick="pularOnboarding()">Agora não</button>
+</div>
+
+<!-- ══ CONFIGURAÇÕES (NOVO) ══ -->
+<div class="screen" id="screen-configuracoes">
+  <div class="exercises-header">
+    <h2 class="exercises-title">Config<em>urações</em></h2>
+    <button class="btn-week-back" onclick="fecharConfiguracoes()">← Voltar</button>
+  </div>
+
+  <div class="config-section">
+    <p class="config-label">Aparência</p>
+    <div class="config-row">
+      <div>
+        <div class="config-row-text">Tema</div>
+        <div class="config-row-sub" id="config-tema-atual">Escuro</div>
+      </div>
+      <button class="theme-toggle" id="theme-toggle-btn-config" style="position:static" onclick="toggleTheme()" title="Alternar tema">🌙</button>
+    </div>
+  </div>
+
+  <div class="config-section">
+    <p class="config-label">Lembrete diário</p>
+    <div class="ios-warning-box" id="config-ios-warning" style="display:none">📲 Você está no iPhone — pra receber a notificação, primeiro adicione esse app à tela de início (toque em Compartilhar → Adicionar à Tela de Início).</div>
+    <p class="onboarding-text" style="max-width:none;margin-bottom:20px;">Escolha o horário em que quer ser lembrada de fazer seu registro.</p>
+    <div class="time-picker-wrap">
+      <div class="time-picker-highlight"></div>
+      <div class="time-picker-col" id="picker-hours-config"></div>
+      <div class="time-picker-sep">:</div>
+      <div class="time-picker-col" id="picker-minutes-config"></div>
+    </div>
+    <button class="landing-btn" style="width:100%;max-width:500px;" id="config-horario-salvar-btn" onclick="salvarHorarioConfig()">Salvar horário</button>
+    <p id="config-horario-status" style="font-size:12px;color:var(--green);text-align:center;margin-top:12px;min-height:16px;"></p>
+  </div>
 </div>
 
 <!-- ══ LETTER READ ══ -->
@@ -1834,10 +2129,14 @@ async function tentarAcesso() {
       sessionStorage.setItem("re-token", senha);
       if (json.nome) sessionStorage.setItem("re-nome", json.nome);
       else sessionStorage.removeItem("re-nome");
+      sessionStorage.setItem('re-onboarding-visto', json.onboardingVisto ? '1' : '0'); // NOVO
+      sessionStorage.setItem('re-horario-lembrete', json.horarioLembrete || '');        // NOVO
       esconderLogin();
       document.getElementById('screen-landing').classList.add('active');
       mostrarBoasVindas();
       verificarRascunhoLanding();
+      vincularOneSignal(senha);  // NOVO
+      verificarOnboarding();     // NOVO
     } else {
       erro.textContent = "Senha incorreta. Verifique e tente novamente.";
       campo.style.border = "1.5px solid #E8601A";
@@ -1868,6 +2167,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('screen-landing').classList.add('active');
     mostrarBoasVindas();
     verificarRascunhoLanding();
+    vincularOneSignal(sessionStorage.getItem('re-token')); // NOVO
+    verificarOnboarding();                                  // NOVO
   }
 });
 
@@ -3655,6 +3956,11 @@ function applyTheme(theme) {
     const btn = document.getElementById('theme-toggle-btn');
     if (btn) btn.textContent = '🌙';
   }
+  // NOVO: espelha o ícone no botão de tema dentro de Configurações + atualiza o texto "Escuro"/"Claro"
+  const btnConfig = document.getElementById('theme-toggle-btn-config');
+  if (btnConfig) btnConfig.textContent = theme === 'light' ? '☀️' : '🌙';
+  const labelConfig = document.getElementById('config-tema-atual');
+  if (labelConfig) labelConfig.textContent = theme === 'light' ? 'Claro' : 'Escuro';
 }
 
 function toggleTheme() {
@@ -3823,8 +4129,7 @@ function renderBreath(c) {
       <p style="font-family:'Lora',serif;font-size:20px;font-weight:400;color:var(--text-primary);text-align:center;margin-bottom:8px;line-height:1.4;">Muito bem. Você deu uma pausa para si mesma.</p>
       <p style="font-size:13px;color:var(--text-secondary);text-align:center;font-weight:300;line-height:1.6;margin-bottom:32px;">Esse momento de cuidado importa — e você merece ele.</p>
       <div class="exercise-final-btns">
-        <button class="btn-calma" onclick="exerciseDone()">✓ Estou mais calma agora</button>
-        <button class="btn-ajuda" onclick="abrirWhatsApp()">💬 Preciso de mais ajuda</button>
+        <button class="btn-calma" onclick="concluirExercicio('breath', this)">✓ Concluí o exercício</button>
       </div>
     </div>
   `;
@@ -3960,8 +4265,7 @@ function renderSensoryFinal(c) {
       <p style="font-family:'Lora',serif;font-size:20px;font-weight:400;color:var(--text-primary);line-height:1.4;margin-bottom:10px;">Você trouxe sua mente de volta ao presente.</p>
       <p style="font-size:13px;color:var(--text-secondary);font-weight:300;line-height:1.6;margin-bottom:36px;">5-4-3-2-1. Cinco sentidos, um momento de cada vez. Isso é presença.</p>
       <div class="exercise-final-btns">
-        <button class="btn-calma" onclick="exerciseDone()">✓ Estou mais calma agora</button>
-        <button class="btn-ajuda" onclick="abrirWhatsApp()">💬 Preciso de mais ajuda</button>
+        <button class="btn-calma" onclick="concluirExercicio('sensory', this)">✓ Concluí o exercício</button>
       </div>
     </div>
   `;
@@ -4027,8 +4331,7 @@ function startColdTimer() {
     <p style="font-size:13px;color:var(--text-secondary);font-weight:300;text-align:center;line-height:1.6;margin-bottom:32px;font-style:italic;">Preste atenção na sensação do frio. Respire enquanto faz isso.</p>
     <div id="cold-timer-final" style="display:none;">
       <div class="exercise-final-btns">
-        <button class="btn-calma" onclick="exerciseDone()">✓ Estou mais calma agora</button>
-        <button class="btn-ajuda" onclick="abrirWhatsApp()">💬 Preciso de mais ajuda</button>
+        <button class="btn-calma" onclick="concluirExercicio('cold', this)">✓ Concluí o exercício</button>
       </div>
     </div>
   `;
@@ -4068,6 +4371,15 @@ function eventIcon(titulo) {
   return '📅';
 }
 
+// NOVO: "Sessão" (ignorando maiúsculas/minúsculas e espaços) vira a frase fixa;
+// qualquer outro texto aparece exatamente como foi digitado.
+function ehSessao(evento) {
+  return String(evento || '').trim().toLowerCase() === 'sessão';
+}
+function tituloEvento(evento) {
+  return ehSessao(evento) ? 'Sua sessão com Kamila' : String(evento || '').trim();
+}
+
 function toDateObj(dia, mes, ano) {
   const m = MESES[String(mes).toLowerCase().trim()] || 1;
   return new Date(Number(ano), m - 1, Number(dia));
@@ -4091,12 +4403,18 @@ async function carregarCalendario() {
       return;
     }
 
-    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    const hoje   = new Date(); hoje.setHours(0,0,0,0);
+    const amanha = new Date(hoje); amanha.setDate(amanha.getDate() + 1); // NOVO
 
     const eventos = data.eventos
       .map(e => ({ ...e, _date: toDateObj(e.dia, e.mes, e.ano) }))
       .filter(e => e._date >= hoje)
-      .sort((a,b) => a._date - b._date);
+      .sort((a,b) => {
+        const diffDate = a._date - b._date;
+        if (diffDate !== 0) return diffDate;
+        // NOVO: mesmo dia → desempata pelo horário (sem horário fica por último)
+        return (a.hora || '99:99').localeCompare(b.hora || '99:99');
+      });
 
     if (!eventos.length) {
       calEl.style.display = 'none';
@@ -4108,15 +4426,27 @@ async function carregarCalendario() {
     calEl.style.display = 'block';
 
     let html = '';
-    const prox = eventos[0];
-    const isHoje = prox._date.getTime() === hoje.getTime();
-    const tituloProx = prox.token ? 'Sua sessão com Kamila' : prox.evento;
-    const iconProx = eventIcon(tituloProx);
-    const mesNome = String(prox.mes).charAt(0).toUpperCase() + String(prox.mes).slice(1).toLowerCase();
+    const prox       = eventos[0];
+    const isHoje      = prox._date.getTime() === hoje.getTime();
+    const isAmanha     = prox._date.getTime() === amanha.getTime(); // NOVO
+    const tituloProx  = tituloEvento(prox.evento);                  // NOVO
+    const iconProx    = eventIcon(tituloProx);
+    const corProx     = ehSessao(prox.evento) ? '' : 'evento-outro'; // NOVO
+    const mesNome     = String(prox.mes).charAt(0).toUpperCase() + String(prox.mes).slice(1).toLowerCase();
 
-    html += `<div class="calendar-next-event">
+    // NOVO: data com hora, ou "Amanhã às X"
+    let dataProxTexto = `${prox.dia} de ${mesNome}`;
+    if (isAmanha) dataProxTexto = 'Amanhã' + (prox.hora ? ` às ${prox.hora}` : '');
+    else if (prox.hora) dataProxTexto += ` · ${prox.hora}`;
+
+    // NOVO: "daqui a X dias"
+    const diffDias = Math.round((prox._date - hoje) / 86400000);
+    const countdownTexto = (!isHoje && !isAmanha && diffDias > 0) ? `daqui a ${diffDias} dias` : '';
+
+    html += `<div class="calendar-next-event ${corProx}">
       <div class="cal-next-label">${isHoje ? '🔴 HOJE' : '📌 PRÓXIMO EVENTO'}</div>
-      <div class="cal-next-date">${iconProx} ${prox.dia} de ${mesNome}</div>
+      <div class="cal-next-date">${iconProx} ${dataProxTexto}</div>
+      ${countdownTexto ? `<div class="cal-next-countdown">${countdownTexto}</div>` : ''}
       <div class="cal-next-title">${tituloProx}</div>
       ${prox.link ? `<a class="cal-next-link" href="${prox.link}" target="_blank">Entrar na reunião →</a>` : ''}
     </div>`;
@@ -4124,20 +4454,27 @@ async function carregarCalendario() {
     if (eventos.length > 1) {
       html += '<div class="calendar-list">';
       eventos.slice(1).forEach((e, i) => {
-        const t = e.token ? 'Sua sessão com Kamila' : e.evento;
-        const ic = eventIcon(t);
-        const isT = e._date.getTime() === hoje.getTime();
+        const t   = tituloEvento(e.evento);                    // NOVO
+        const ic  = eventIcon(t);
+        const cor = ehSessao(e.evento) ? '' : 'evento-outro';   // NOVO
+        const isT  = e._date.getTime() === hoje.getTime();
+        const isAm = e._date.getTime() === amanha.getTime();    // NOVO
         const mIdx = MESES[String(e.mes).toLowerCase().trim()] || 1;
         const mAbrev = MESES_ABREV[mIdx];
         const mNome = String(e.mes).charAt(0).toUpperCase() + String(e.mes).slice(1).toLowerCase();
-        html += `<div class="cal-card ${isT ? 'today' : ''}" style="animation-delay:${(i+1)*0.08}s">
+        // NOVO: "Amanhã às X" ou "Mês Ano · hora"
+        const subTexto = isAm
+          ? ('Amanhã' + (e.hora ? ` às ${e.hora}` : ''))
+          : (mNome + ' ' + e.ano + (e.hora ? ' · ' + e.hora : ''));
+
+        html += `<div class="cal-card ${isT ? 'today' : ''} ${cor}" style="animation-delay:${(i+1)*0.08}s">
           <div class="cal-date-box">
             <span class="cal-day">${e.dia}</span>
             <span class="cal-month">${mAbrev}</span>
           </div>
           <div class="cal-info">
             <div class="cal-event-title"><span class="cal-event-icon">${ic}</span>${t}</div>
-            <div class="cal-event-sub">${mNome} ${e.ano}</div>
+            <div class="cal-event-sub">${subTexto}</div>
           </div>
           ${e.link ? `<a class="cal-link-btn" href="${e.link}" target="_blank" title="Entrar">🔗</a>` : ''}
         </div>`;
@@ -4151,6 +4488,7 @@ async function carregarCalendario() {
     if (divEl) divEl.style.display = 'none';
   }
 }
+
 
 // ── SAUDAÇÃO CONTEXTUAL ───────────────────────────────
 function mostrarContextoLanding() {
@@ -4341,6 +4679,7 @@ async function salvarCarta() {
     });
     const data = await res.json();
     if (data.ok) {
+      registrarUsoExercicio('letter'); // NOVO: registra o uso assim que a carta é salva de verdade
       const c = document.getElementById('exercise-detail-content');
       c.innerHTML = `
         <div style="text-align:center;padding-top:20px;">
@@ -4356,6 +4695,332 @@ async function salvarCarta() {
   } catch(e) {
     if (btn) { btn.disabled = false; btn.textContent = '💚 Guardar minha carta'; }
   }
+}
+
+// ════════════════════════════════════════════════════════
+//  NOVO · ONESIGNAL (notificações push)
+// ════════════════════════════════════════════════════════
+const ONESIGNAL_APP_ID = "ce392854-4310-4d50-bffb-fe785952228b";
+
+function oneSignalReady(callback) {
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  window.OneSignalDeferred.push(callback);
+}
+
+oneSignalReady(async function(OneSignal) {
+  try {
+    await OneSignal.init({
+      appId: ONESIGNAL_APP_ID,
+      serviceWorkerPath: "service-worker.js",
+      serviceWorkerParam: { scope: "/projeto_reset/" }
+    });
+  } catch(e) {}
+});
+
+// Vincula o aparelho atual ao token da pessoa (External ID no OneSignal)
+function vincularOneSignal(token) {
+  if (!token) return;
+  oneSignalReady(async function(OneSignal) {
+    try { await OneSignal.login(token); } catch(e) {}
+  });
+}
+
+// Pede a permissão nativa do navegador — só deve ser chamada a partir de
+// uma ação clara da pessoa (ex: confirmar o horário do lembrete)
+function pedirPermissaoNotificacao() {
+  oneSignalReady(async function(OneSignal) {
+    try { await OneSignal.Notifications.requestPermission(); } catch(e) {}
+  });
+}
+
+// ════════════════════════════════════════════════════════
+//  NOVO · DETECÇÃO DE IPHONE NÃO INSTALADO
+// ════════════════════════════════════════════════════════
+function isIOSNaoInstalado() {
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  return isIOS && !isStandalone;
+}
+
+// ════════════════════════════════════════════════════════
+//  NOVO · REGISTRO DE USO DOS EXERCÍCIOS
+// ════════════════════════════════════════════════════════
+const EXERCICIO_NOMES = {
+  breath:  'Reseta e Respira',
+  sensory: 'Reset na Ansiedade',
+  cold:    'Reset nos Pensamentos',
+  letter:  'Carta para o Futuro'
+};
+
+async function registrarUsoExercicio(tipo) {
+  const token = sessionStorage.getItem('re-token');
+  const nome  = EXERCICIO_NOMES[tipo] || tipo;
+  if (!token) return;
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ acao: 'registrarExercicio', token, exercicio: nome })
+    });
+  } catch(e) {
+    // Falha silenciosa de propósito — não trava a experiência da pessoa
+  }
+}
+
+async function concluirExercicio(tipo, btnEl) {
+  if (btnEl) {
+    btnEl.disabled = true;
+    btnEl.textContent = 'Registrando...';
+    btnEl.style.opacity = '0.6';
+  }
+  await registrarUsoExercicio(tipo);
+  const wrap = btnEl ? btnEl.closest('.exercise-final-btns') : null;
+  if (wrap) {
+    wrap.innerHTML = `
+      <button class="btn-calma" onclick="exerciseDone()">✓ Estou mais calma agora</button>
+      <button class="btn-ajuda" onclick="abrirWhatsApp()">💬 Preciso de mais ajuda</button>
+    `;
+  }
+}
+
+// ════════════════════════════════════════════════════════
+//  NOVO · ONBOARDING (introdução + escolha de horário)
+// ════════════════════════════════════════════════════════
+function verificarOnboarding() {
+  const visto    = sessionStorage.getItem('re-onboarding-visto') === '1';
+  const horario  = sessionStorage.getItem('re-horario-lembrete') || '';
+  const banner   = document.getElementById('landing-banner-horario');
+
+  if (!visto) {
+    mostrarOnboardingIntro();
+    if (banner) banner.style.display = 'none';
+    return;
+  }
+
+  if (!horario) {
+    if (banner) {
+      const txtEl = document.getElementById('landing-banner-horario-texto');
+      if (txtEl) {
+        txtEl.textContent = isIOSNaoInstalado()
+          ? '📲 Instale o app na tela de início pra receber seus lembretes'
+          : 'Ainda não escolheu seu horário de cuidado? Escolher agora';
+      }
+      banner.style.display = 'flex';
+    }
+  } else if (banner) {
+    banner.style.display = 'none';
+  }
+}
+
+function mostrarOnboardingIntro() {
+  document.getElementById('screen-landing').classList.remove('active');
+  document.getElementById('screen-onboarding-intro').classList.add('active');
+}
+
+function avancarOnboarding() {
+  document.getElementById('screen-onboarding-intro').classList.remove('active');
+  document.getElementById('screen-onboarding-horario').classList.add('active');
+
+  const aviso = document.getElementById('onboarding-ios-warning');
+  if (aviso) aviso.style.display = isIOSNaoInstalado() ? 'block' : 'none';
+
+  montarTimePicker('picker-hours-onboarding', 'picker-minutes-onboarding');
+}
+
+// Acesso direto à escolha de horário (usado pelo banner da tela inicial)
+function abrirOnboardingHorarioDireto() {
+  document.getElementById('screen-landing').classList.remove('active');
+  document.getElementById('screen-onboarding-horario').classList.add('active');
+
+  const aviso = document.getElementById('onboarding-ios-warning');
+  if (aviso) aviso.style.display = isIOSNaoInstalado() ? 'block' : 'none';
+
+  montarTimePicker('picker-hours-onboarding', 'picker-minutes-onboarding', sessionStorage.getItem('re-horario-lembrete') || '');
+}
+
+async function confirmarHorarioOnboarding() {
+  const token   = sessionStorage.getItem('re-token');
+  const horario = pegarHorarioSelecionado('picker-hours-onboarding', 'picker-minutes-onboarding');
+  const btn     = document.getElementById('onboarding-horario-confirmar-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
+
+  pedirPermissaoNotificacao();
+
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ acao: 'salvarHorarioLembrete', token, horario })
+    });
+  } catch(e) {}
+
+  sessionStorage.setItem('re-onboarding-visto', '1');
+  sessionStorage.setItem('re-horario-lembrete', horario);
+
+  if (btn) { btn.disabled = false; btn.textContent = 'Confirmar horário'; }
+  voltarParaLandingAposOnboarding();
+}
+
+async function pularOnboarding() {
+  const token = sessionStorage.getItem('re-token');
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ acao: 'salvarOnboardingVisto', token })
+    });
+  } catch(e) {}
+
+  sessionStorage.setItem('re-onboarding-visto', '1');
+  voltarParaLandingAposOnboarding();
+}
+
+function voltarParaLandingAposOnboarding() {
+  document.getElementById('screen-onboarding-intro').classList.remove('active');
+  document.getElementById('screen-onboarding-horario').classList.remove('active');
+  document.getElementById('screen-landing').classList.add('active');
+  verificarOnboarding();
+}
+
+// ════════════════════════════════════════════════════════
+//  NOVO · SELETOR DE HORÁRIO (estilo despertador)
+//  Reaproveitado tanto no onboarding quanto em Configurações.
+// ════════════════════════════════════════════════════════
+function montarTimePicker(idHoras, idMinutos, valorInicial) {
+  const colH = document.getElementById(idHoras);
+  const colM = document.getElementById(idMinutos);
+  if (!colH || !colM) return;
+
+  const partes   = (valorInicial || '19:00').split(':');
+  const hInicial = (partes[0] || '19').padStart(2, '0');
+  const mInicial = arredondarMinuto(partes[1] || '00');
+
+  let htmlH = '<div class="time-picker-pad"></div>';
+  for (let h = 0; h < 24; h++) htmlH += `<div class="time-picker-item" data-value="${String(h).padStart(2,'0')}">${String(h).padStart(2,'0')}</div>`;
+  htmlH += '<div class="time-picker-pad"></div>';
+  colH.innerHTML = htmlH;
+
+  let htmlM = '<div class="time-picker-pad"></div>';
+  for (let m = 0; m < 60; m += 5) htmlM += `<div class="time-picker-item" data-value="${String(m).padStart(2,'0')}">${String(m).padStart(2,'0')}</div>`;
+  htmlM += '<div class="time-picker-pad"></div>';
+  colM.innerHTML = htmlM;
+
+  // Pequena espera pro layout calcular as alturas antes de posicionar
+  setTimeout(() => {
+    pickerScrollParaValor(colH, hInicial);
+    pickerScrollParaValor(colM, mInicial);
+    pickerMarcarSelecionado(colH);
+    pickerMarcarSelecionado(colM);
+  }, 50);
+
+  colH.onscroll = () => pickerDebounce(colH);
+  colM.onscroll = () => pickerDebounce(colM);
+}
+
+function arredondarMinuto(m) {
+  const n = Math.round(Number(m) / 5) * 5;
+  return String(n >= 60 ? 55 : n).padStart(2, '0');
+}
+
+function pickerScrollParaValor(col, valor) {
+  const item = Array.from(col.children).find(el => el.dataset && el.dataset.value === valor);
+  if (item) col.scrollTop = item.offsetTop - (col.clientHeight / 2) + (item.clientHeight / 2);
+}
+
+let pickerTimers = {};
+function pickerDebounce(col) {
+  clearTimeout(pickerTimers[col.id]);
+  pickerTimers[col.id] = setTimeout(() => pickerSnap(col), 120);
+}
+
+function pickerItemCentral(col) {
+  if (!col) return null;
+  const centro = col.scrollTop + col.clientHeight / 2;
+  let maisProximo = null, menorDist = Infinity;
+  Array.from(col.children).forEach(el => {
+    if (!el.dataset || !el.dataset.value) return;
+    const centroItem = el.offsetTop + el.clientHeight / 2;
+    const dist = Math.abs(centro - centroItem);
+    if (dist < menorDist) { menorDist = dist; maisProximo = el; }
+  });
+  return maisProximo;
+}
+
+function pickerSnap(col) {
+  const item = pickerItemCentral(col);
+  if (!item) return;
+  col.scrollTo({ top: item.offsetTop - (col.clientHeight / 2) + (item.clientHeight / 2), behavior: 'smooth' });
+  pickerMarcarSelecionado(col);
+}
+
+function pickerMarcarSelecionado(col) {
+  const item = pickerItemCentral(col);
+  Array.from(col.children).forEach(el => el.classList && el.classList.remove('selected'));
+  if (item) item.classList.add('selected');
+}
+
+function pegarHorarioSelecionado(idHoras, idMinutos) {
+  const itemH = pickerItemCentral(document.getElementById(idHoras));
+  const itemM = pickerItemCentral(document.getElementById(idMinutos));
+  const h = itemH ? itemH.dataset.value : '19';
+  const m = itemM ? itemM.dataset.value : '00';
+  return `${h}:${m}`;
+}
+
+// ════════════════════════════════════════════════════════
+//  NOVO · CONFIGURAÇÕES
+// ════════════════════════════════════════════════════════
+function abrirConfiguracoes() {
+  document.getElementById('screen-landing').classList.remove('active');
+  document.getElementById('screen-configuracoes').classList.add('active');
+
+  const temaAtual = document.body.classList.contains('theme-light') ? 'Claro' : 'Escuro';
+  const elTema = document.getElementById('config-tema-atual');
+  if (elTema) elTema.textContent = temaAtual;
+
+  const aviso = document.getElementById('config-ios-warning');
+  if (aviso) aviso.style.display = isIOSNaoInstalado() ? 'block' : 'none';
+
+  const horarioAtual = sessionStorage.getItem('re-horario-lembrete') || '19:00';
+  montarTimePicker('picker-hours-config', 'picker-minutes-config', horarioAtual);
+
+  const status = document.getElementById('config-horario-status');
+  if (status) status.textContent = '';
+}
+
+function fecharConfiguracoes() {
+  document.getElementById('screen-configuracoes').classList.remove('active');
+  document.getElementById('screen-landing').classList.add('active');
+}
+
+async function salvarHorarioConfig() {
+  const token   = sessionStorage.getItem('re-token');
+  const horario = pegarHorarioSelecionado('picker-hours-config', 'picker-minutes-config');
+  const btn     = document.getElementById('config-horario-salvar-btn');
+  const status  = document.getElementById('config-horario-status');
+  if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
+
+  pedirPermissaoNotificacao();
+
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ acao: 'salvarHorarioLembrete', token, horario })
+    });
+    sessionStorage.setItem('re-horario-lembrete', horario);
+    sessionStorage.setItem('re-onboarding-visto', '1');
+    if (status) status.textContent = 'Horário atualizado! Vale a partir de amanhã.';
+  } catch(e) {
+    if (status) status.textContent = 'Não deu pra salvar agora, tenta de novo.';
+  }
+  if (btn) { btn.disabled = false; btn.textContent = 'Salvar horário'; }
+}
+
+// ════════════════════════════════════════════════════════
+//  NOVO · AULAS GRAVADAS E COMUNIDADE
+// ════════════════════════════════════════════════════════
+function openAulas() {
+  window.open('https://dashboard.kiwify.com.br/courses', '_blank');
+}
+function openComunidade() {
+  window.open('https://chat.whatsapp.com/KxjYx5QkRAeGoccwlsXLLD', '_blank');
 }
 </script>
 </body>
