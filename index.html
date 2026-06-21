@@ -4711,17 +4711,21 @@ oneSignalReady(async function(OneSignal) {
   try {
     await OneSignal.init({
       appId: ONESIGNAL_APP_ID,
-      serviceWorkerPath: "service-worker.js",
+      // CORRIGIDO: o caminho do service worker precisa incluir a subpasta
+      // "projeto_reset/" — sem isso, o OneSignal tentava buscar o arquivo
+      // na raiz do domínio (kjansenbonatto.github.io/service-worker.js),
+      // que não existe, e a inicialização falhava silenciosamente.
+      serviceWorkerPath: "projeto_reset/service-worker.js",
       serviceWorkerParam: { scope: "/projeto_reset/" }
     });
-  } catch(e) {}
+  } catch(e) { console.error('Erro ao iniciar OneSignal:', e); }
 });
 
 // Vincula o aparelho atual ao token da pessoa (External ID no OneSignal)
 function vincularOneSignal(token) {
   if (!token) return;
   oneSignalReady(async function(OneSignal) {
-    try { await OneSignal.login(token); } catch(e) {}
+    try { await OneSignal.login(token); } catch(e) { console.error('Erro ao vincular OneSignal:', e); }
   });
 }
 
@@ -4729,7 +4733,7 @@ function vincularOneSignal(token) {
 // uma ação clara da pessoa (ex: confirmar o horário do lembrete)
 function pedirPermissaoNotificacao() {
   oneSignalReady(async function(OneSignal) {
-    try { await OneSignal.Notifications.requestPermission(); } catch(e) {}
+    try { await OneSignal.Notifications.requestPermission(); } catch(e) { console.error('Erro ao pedir permissão:', e); }
   });
 }
 
