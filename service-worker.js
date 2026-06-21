@@ -1,3 +1,18 @@
+// ════════════════════════════════════════════════════════
+//  Reset Emocional · Service Worker
+//
+//  NOVO: importa o Service Worker do OneSignal logo no início do
+//  arquivo, pra notificações push funcionarem dentro do mesmo
+//  arquivo que já cuida do cache/atualização automática.
+//
+//  Nota: a versão do cache (CACHE_NAME) continua "v5" por enquanto,
+//  como combinamos — só sobe pra "v6" junto com a entrega do HTML,
+//  no final, pra todo mundo receber uma atualização só.
+// ════════════════════════════════════════════════════════
+
+// NOVO: SDK de push do OneSignal (precisa ficar no topo do arquivo)
+importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
+
 // Mude esta versão a cada deploy para forçar atualização automática
 const CACHE_NAME = 'reset-emocional-v5';
 const ASSETS = [
