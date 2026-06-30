@@ -7,13 +7,16 @@
 //
 //  NOVO: versão do cache subiu de "v5" pra "v6" junto com esta
 //  entrega do HTML — todo mundo recebe a atualização de uma vez.
+//
+//  v7: adicionada Roda da Vida — bump de versão para forçar
+//  atualização em todos os dispositivos.
 // ════════════════════════════════════════════════════════
 
 // NOVO: SDK de push do OneSignal (precisa ficar no topo do arquivo)
 importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
 
 // Mude esta versão a cada deploy para forçar atualização automática
-const CACHE_NAME = 'reset-emocional-v6';
+const CACHE_NAME = 'reset-emocional-v7';
 const ASSETS = [
   '/projeto_reset/',
   '/projeto_reset/index.html',
