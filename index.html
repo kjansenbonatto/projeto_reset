@@ -1202,6 +1202,34 @@ body.theme-light .landing-btn {
   box-shadow: 0 8px 24px rgba(74,94,66,0.3);
 }
 
+/* ── BOTÃO RODA DA VIDA (2º destaque) ── */
+.landing-btn-roda {
+  display: inline-block;
+  background: transparent;
+  color: var(--orange);
+  border: 2px solid var(--orange);
+  border-radius: 100px;
+  padding: 14px 40px;
+  font-size: 14px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 16px rgba(232,96,26,0.12);
+}
+.landing-btn-roda:hover {
+  background: var(--orange);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(232,96,26,0.35);
+  transform: translateY(-1px);
+}
+body.theme-light .landing-btn-roda {
+  color: var(--orange);
+  border-color: var(--orange);
+}
+
 /* ── CONTEXTO LANDING ── */
 .landing-ctx {
   font-size: 12px;
@@ -1789,6 +1817,394 @@ body.theme-light .time-picker-highlight { opacity: 0.5; }
   0%, 100% { box-shadow: 0 0 0 0 rgba(74,94,66,0); }
   50% { box-shadow: 0 0 0 4px rgba(74,94,66,0.15); }
 }
+
+/* ══════════════════════════════════════════════════════
+   RODA DA VIDA — estilos
+══════════════════════════════════════════════════════ */
+
+/* Cores dos 4 pilares — seguem a paleta do projeto */
+:root {
+  --roda-qualidade: #4A5E42;   /* verde — Qualidade de Vida  (sup. esq.) */
+  --roda-pessoal:   #EAE0CF;   /* bege — Pessoal             (sup. dir.) */
+  --roda-relac:     #888888;   /* cinza médio — Relacionamentos (inf. esq.) */
+  --roda-prof:      #E8601A;   /* laranja — Profissional     (inf. dir.) */
+}
+
+/* Telas genéricas de fluxo da Roda */
+#screen-roda-intro,
+#screen-roda-frase,
+#screen-roda-pilar,
+#screen-roda-resultado,
+#screen-roda-historico {
+  min-height: 100vh;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 16px 80px;
+  background: var(--bg-main);
+}
+
+/* Header padrão reaproveitado */
+.roda-header {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 0 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 28px;
+  position: sticky;
+  top: 0;
+  background: var(--bg-main);
+  z-index: 10;
+}
+.roda-titulo {
+  font-family: 'Lora', serif;
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+.roda-titulo em { color: var(--orange); font-style: italic; }
+
+/* Tela de intro */
+.roda-intro-box {
+  width: 100%;
+  max-width: 500px;
+}
+.roda-intro-text {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  font-weight: 300;
+  margin-bottom: 20px;
+  font-family: 'Poppins', sans-serif;
+}
+.roda-intro-text strong { color: var(--text-primary); font-weight: 500; }
+
+/* Frase inspiradora */
+#screen-roda-frase {
+  justify-content: center;
+  text-align: center;
+  background: var(--bg-landing);
+}
+.roda-frase-text {
+  font-family: 'Lora', serif;
+  font-size: clamp(20px, 5vw, 28px);
+  font-weight: 400;
+  font-style: italic;
+  color: var(--landing-title-color);
+  max-width: 380px;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+.roda-frase-autor {
+  font-size: 11px;
+  color: var(--orange);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-family: 'Poppins', sans-serif;
+  margin-bottom: 44px;
+}
+
+/* Tela de pilar — slider de nota */
+.roda-pilar-badge {
+  display: inline-block;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  padding: 4px 14px;
+  border-radius: 100px;
+  margin-bottom: 20px;
+}
+.roda-pilar-progresso {
+  width: 100%;
+  max-width: 500px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-align: right;
+  font-family: 'Poppins', sans-serif;
+  margin-bottom: 6px;
+}
+.roda-area-card {
+  width: 100%;
+  max-width: 500px;
+  background: var(--bg-card);
+  border-radius: 20px;
+  border: 1px solid var(--border-subtle);
+  padding: 22px 22px 20px;
+  margin-bottom: 16px;
+  animation: cardIn 0.3s ease;
+}
+.roda-area-nome {
+  font-family: 'Lora', serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+.roda-area-perguntas {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  font-weight: 300;
+  font-family: 'Poppins', sans-serif;
+  margin-bottom: 20px;
+  font-style: italic;
+}
+.roda-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+.roda-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+  background: var(--border-input);
+}
+.roda-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  cursor: pointer;
+}
+.roda-slider-val {
+  font-family: 'Lora', serif;
+  font-size: 26px;
+  font-weight: 400;
+  min-width: 32px;
+  text-align: center;
+}
+.roda-slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-family: 'Poppins', sans-serif;
+  padding: 0 2px;
+}
+
+/* Canvas da roda */
+.roda-canvas-wrap {
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto 24px;
+  position: relative;
+}
+.roda-canvas-wrap canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Legenda dos pilares */
+.roda-legenda {
+  width: 100%;
+  max-width: 500px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.roda-legenda-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-family: 'Poppins', sans-serif;
+  color: var(--text-secondary);
+  font-weight: 300;
+}
+.roda-legenda-cor {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+/* Botão de girar */
+.btn-girar-roda {
+  width: 100%;
+  max-width: 500px;
+  background: transparent;
+  border: 2px solid var(--border-input);
+  border-radius: 14px;
+  padding: 14px;
+  font-size: 14px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-girar-roda:hover { border-color: var(--orange); color: var(--orange); }
+
+/* Aviso dos 15 dias */
+.roda-aviso-dias {
+  width: 100%;
+  max-width: 500px;
+  background: rgba(232,96,26,0.07);
+  border: 1px solid rgba(232,96,26,0.2);
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 12px;
+  font-family: 'Poppins', sans-serif;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 12px;
+  text-align: center;
+}
+.roda-aviso-dias strong { color: var(--orange); }
+
+/* Caixinha de compromisso */
+.roda-compromisso-box {
+  width: 100%;
+  max-width: 500px;
+  border: 1.5px solid var(--border-input);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  background: var(--bg-card);
+}
+.roda-compromisso-titulo {
+  font-family: 'Lora', serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+.roda-compromisso-sub {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-family: 'Poppins', sans-serif;
+  font-weight: 300;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+/* Linhas de caderno vazias */
+.roda-compromisso-linhas {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 12px;
+}
+.roda-compromisso-linha {
+  height: 34px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 4px;
+}
+/* Textarea de compromisso (quando editando) */
+.roda-compromisso-textarea {
+  width: 100%;
+  min-height: 90px;
+  background: var(--bg-input);
+  border: 1.5px solid var(--border-input);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px;
+  color: var(--text-primary);
+  resize: vertical;
+  outline: none;
+  line-height: 1.6;
+  font-weight: 300;
+  transition: border-color 0.2s;
+  margin-bottom: 10px;
+}
+.roda-compromisso-textarea:focus { border-color: var(--orange); }
+.roda-compromisso-textarea::placeholder { color: var(--text-tertiary); font-style: italic; }
+/* Texto já preenchido */
+.roda-compromisso-texto-salvo {
+  font-family: 'Lora', serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-primary);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  padding: 4px 0 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 12px;
+}
+.btn-editar-compromisso {
+  font-size: 12px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  color: var(--orange);
+  background: transparent;
+  border: 1.5px solid rgba(232,96,26,0.3);
+  border-radius: 100px;
+  padding: 6px 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-editar-compromisso:hover { background: var(--orange); color: #fff; }
+
+/* Incentivo integração com Método Reset */
+.roda-reset-incentivo {
+  width: 100%;
+  max-width: 500px;
+  background: rgba(74,94,66,0.08);
+  border: 1px solid rgba(74,94,66,0.2);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  font-family: 'Poppins', sans-serif;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  font-weight: 300;
+}
+.roda-reset-incentivo strong { color: var(--green); font-weight: 500; }
+
+/* Histórico — rodas empilhadas */
+.roda-historico-item {
+  width: 100%;
+  max-width: 500px;
+  background: var(--bg-card);
+  border-radius: 20px;
+  border: 1px solid var(--border-subtle);
+  padding: 20px;
+  margin-bottom: 20px;
+  animation: cardIn 0.3s ease;
+}
+.roda-historico-data {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-family: 'Poppins', sans-serif;
+  margin-bottom: 14px;
+}
+.roda-historico-badge {
+  display: inline-block;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 100px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
 </style>
 <!-- NOVO: SDK de notificações push do OneSignal -->
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
@@ -1848,6 +2264,7 @@ body.theme-light .time-picker-highlight { opacity: 0.5; }
   <h1 class="landing-title">Reset<em>Emocional</em></h1>
   <p class="landing-desc">Um espaço só seu para nomear o que sente, entender o que precisa e escolher uma ação de cuidado — todos os dias.</p>
   <button class="landing-btn" onclick="startDiary()">Começar meu registro →</button>
+  <button class="landing-btn-roda" id="btn-roda-landing" onclick="abrirRodaDaVida()" style="opacity:0;animation:fadeUp 0.7s ease 0.6s forwards;position:relative;z-index:1;">🌀 Roda da Vida</button>
   <button class="landing-btn-week" style="margin-bottom:10px" onclick="openExercises()">⏸️ Momento de reset</button>
   <button class="landing-btn-week" style="margin-bottom:10px" onclick="openAulas()">🎥 Aulas Gravadas</button>
   <button class="landing-btn-week" style="margin-bottom:10px" onclick="openComunidade()">💬 Comunidade Emocionadas</button>
@@ -2004,6 +2421,111 @@ body.theme-light .time-picker-highlight { opacity: 0.5; }
 <button class="pwa-install-btn" id="pwa-install-btn" style="display:none" onclick="installPWA()">
   <span>📲</span> Baixar App
 </button>
+
+<!-- ══ RODA DA VIDA · INTRO ══ -->
+<div class="screen" id="screen-roda-intro">
+  <div class="roda-header">
+    <h2 class="roda-titulo">Roda da <em>Vida</em></h2>
+    <button class="btn-week-back" onclick="fecharRodaIntro()">← Voltar</button>
+  </div>
+  <div class="roda-intro-box">
+    <p class="roda-intro-text">
+      A Roda da Vida te ajuda a ver quais as áreas da tua vida precisam de mais atenção, e quais estão indo bem.<br><br>
+      <strong>Nossa vida gira em torno de 4 Pilares:</strong> Pessoal, Profissional, Relacionamentos e Qualidade de Vida.<br><br>
+      Para cada pilar haverão <strong>3 áreas de referência</strong>.<br><br>
+      Para cada área, você deve dar uma nota de <strong>0 a 10</strong>, sendo que 0 significa que não tem como piorar, e 10 que não tem como melhorar.<br><br>
+      Depois de preenchido, você verá que uma roda vai se formar. Porém, essa roda não está redonda. <strong>Escolha apenas uma área para melhorar para os próximos 15 dias.</strong><br><br>
+      Escolha uma ação, coloque em prática junto com o uso do seu Método Reset — seja no caderno físico ou no app. Após 15 dias, refaça sua roda, e repita o processo.
+    </p>
+    <button class="landing-btn" style="width:100%;max-width:500px;" onclick="irParaFraseRoda()">Preencha sua Roda da Vida →</button>
+  </div>
+</div>
+
+<!-- ══ RODA DA VIDA · FRASE INSPIRADORA ══ -->
+<div class="screen" id="screen-roda-frase">
+  <div class="landing-lines"><span></span><span></span><span></span></div>
+  <p class="roda-frase-text">"Escolha quem você quer ser,<br>e seja... de propósito."</p>
+  <p class="roda-frase-autor">— Autor desconhecido</p>
+  <button class="landing-btn" onclick="iniciarPreenchimentoRoda()">Começar →</button>
+</div>
+
+<!-- ══ RODA DA VIDA · PREENCHIMENTO (pilar por pilar) ══ -->
+<div class="screen" id="screen-roda-pilar">
+  <div class="roda-header">
+    <h2 class="roda-titulo" id="roda-pilar-titulo">Roda da <em>Vida</em></h2>
+    <button class="btn-week-back" onclick="voltarPilarRoda()">← Voltar</button>
+  </div>
+  <p class="roda-pilar-progresso" id="roda-pilar-progresso">Pilar 1 de 4</p>
+  <div id="roda-pilar-conteudo" style="width:100%;max-width:500px;"></div>
+  <div style="width:100%;max-width:500px;">
+    <div class="nav-row">
+      <button class="btn-back" id="roda-pilar-btn-voltar" onclick="voltarPilarRoda()">← Voltar</button>
+      <button class="btn-next" id="roda-pilar-btn-avancar" style="background:var(--orange)" onclick="avancarPilarRoda()">Continuar →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RODA DA VIDA · RESULTADO ══ -->
+<div class="screen" id="screen-roda-resultado">
+  <div class="roda-header">
+    <h2 class="roda-titulo">Minha <em>Roda</em></h2>
+    <button class="btn-week-back" onclick="fecharResultadoRoda()">🏠 Início</button>
+  </div>
+
+  <!-- Canvas da roda -->
+  <div class="roda-canvas-wrap">
+    <canvas id="canvas-roda-resultado" width="320" height="320"></canvas>
+  </div>
+
+  <!-- Legenda -->
+  <div class="roda-legenda">
+    <div class="roda-legenda-item">
+      <div class="roda-legenda-cor" style="background:var(--roda-qualidade)"></div>
+      <span>Qualidade de Vida</span>
+    </div>
+    <div class="roda-legenda-item">
+      <div class="roda-legenda-cor" style="background:var(--roda-pessoal);border:1px solid var(--border-input)"></div>
+      <span>Pessoal</span>
+    </div>
+    <div class="roda-legenda-item">
+      <div class="roda-legenda-cor" style="background:var(--roda-relac)"></div>
+      <span>Relacionamentos</span>
+    </div>
+    <div class="roda-legenda-item">
+      <div class="roda-legenda-cor" style="background:var(--roda-prof)"></div>
+      <span>Profissional</span>
+    </div>
+  </div>
+
+  <!-- Botões de ação -->
+  <button class="btn-girar-roda" onclick="girarRoda('canvas-roda-resultado', rodaAtualNotas)">🌀 Girar minha roda</button>
+  <button class="btn-girar-roda" onclick="abrirHistoricoRodas()">📂 Ver rodas anteriores</button>
+
+  <!-- Aviso 15 dias -->
+  <div class="roda-aviso-dias" id="roda-aviso-dias" style="display:none"></div>
+  <button class="landing-btn-week" id="btn-corrigir-roda" style="display:none;margin-bottom:16px;width:100%;max-width:500px;" onclick="corrigirRoda()">✏️ Preciso Corrigir Minha Roda da Vida</button>
+
+  <!-- Incentivo integração -->
+  <div class="roda-reset-incentivo">
+    🌿 <strong>Lembre-se:</strong> a ação que você vai escolher para melhorar sua área de foco deve ser coerente com o que você está praticando no seu Método Reset — seja no caderno físico ou aqui no app. Cada registro que você faz é um passo para a sua roda ficar mais redonda.
+  </div>
+
+  <!-- Compromisso -->
+  <div class="roda-compromisso-box" id="roda-compromisso-box">
+    <p class="roda-compromisso-titulo">Agora, escolha uma área com a nota mais baixa. Usando o Método Reset, você deve escolher uma ação. Essa é a ação que você decidiu fazer para melhorar sua Roda da Vida:</p>
+    <p class="roda-compromisso-sub">Escreva aqui o seu compromisso com você mesma.</p>
+    <div id="roda-compromisso-conteudo"></div>
+  </div>
+</div>
+
+<!-- ══ RODA DA VIDA · HISTÓRICO ══ -->
+<div class="screen" id="screen-roda-historico">
+  <div class="roda-header">
+    <h2 class="roda-titulo">Minhas <em>Rodas</em></h2>
+    <button class="btn-week-back" onclick="fecharHistoricoRodas()">← Voltar</button>
+  </div>
+  <div id="roda-historico-conteudo" style="width:100%;max-width:500px;"></div>
+</div>
 <div class="screen" id="screen-diary">
 
   <!-- NAV TABS -->
@@ -5027,6 +5549,706 @@ function openAulas() {
 }
 function openComunidade() {
   window.open('https://chat.whatsapp.com/KxjYx5QkRAeGoccwlsXLLD', '_blank');
+}
+
+// ════════════════════════════════════════════════════════
+//  RODA DA VIDA
+// ════════════════════════════════════════════════════════
+
+// ── Dados dos pilares e áreas ────────────────────────
+const RODA_PILARES = [
+  {
+    id: 'qualidade',
+    nome: 'Qualidade de Vida',
+    cor: '#4A5E42',
+    posicao: 'superior esquerdo',
+    areas: [
+      {
+        id: 'diversao',
+        nome: 'Diversão',
+        perguntas: 'Tenho um hobby ou lazer intencional?'
+      },
+      {
+        id: 'felicidade',
+        nome: 'Felicidade',
+        perguntas: 'Sinto que minha vida tem um objetivo claro, ou sinto que estou sempre no modo sobrevivência?'
+      },
+      {
+        id: 'espiritualidade',
+        nome: 'Espiritualidade',
+        perguntas: 'Qual a regularidade do meu estudo? Qual a profundidade da minha conexão com o Criador?'
+      }
+    ]
+  },
+  {
+    id: 'pessoal',
+    nome: 'Pessoal',
+    cor: '#C8B89A',
+    posicao: 'superior direito',
+    areas: [
+      {
+        id: 'saudeFisica',
+        nome: 'Saúde Física',
+        perguntas: 'Como está minha alimentação? Meu sono e atividades físicas?'
+      },
+      {
+        id: 'intelectual',
+        nome: 'Intelectual',
+        perguntas: 'Estou me dedicando a aprender coisas novas — livros, cursos, conteúdos que me expandem?'
+      },
+      {
+        id: 'saudeEmocional',
+        nome: 'Saúde Emocional',
+        perguntas: 'Tenho sentido mais emoções positivas ou emoções negativas?'
+      }
+    ]
+  },
+  {
+    id: 'relac',
+    nome: 'Relacionamentos',
+    cor: '#888888',
+    posicao: 'inferior esquerdo',
+    areas: [
+      {
+        id: 'amor',
+        nome: 'Amor',
+        perguntas: 'Se sou casada, estou contente com meu relacionamento? Se sou solteira, estou contente com meu estado de solteira?'
+      },
+      {
+        id: 'familia',
+        nome: 'Família',
+        perguntas: 'Tenho um contato saudável ou sinto que dependo deles ou eles de mim?'
+      },
+      {
+        id: 'vidaSocial',
+        nome: 'Vida Social',
+        perguntas: 'Invisto nas minhas amizades e tiro tempo para elas?'
+      }
+    ]
+  },
+  {
+    id: 'prof',
+    nome: 'Profissional',
+    cor: '#E8601A',
+    posicao: 'inferior direito',
+    areas: [
+      {
+        id: 'contribuicaoSocial',
+        nome: 'Contribuição Social',
+        perguntas: 'Eu contribuo com outros e sinto que fico feliz com o crescimento deles?'
+      },
+      {
+        id: 'recursosFinanceiros',
+        nome: 'Recursos Financeiros',
+        perguntas: 'Tenho o suficiente ou sinto que estou sempre no vermelho?'
+      },
+      {
+        id: 'carreira',
+        nome: 'Carreira',
+        perguntas: 'Me sinto feliz e realizada? Se não trabalho fora: estou contente com meu dia a dia?'
+      }
+    ]
+  }
+];
+
+// Ordem das 12 fatias na roda (sentido horário a partir do topo)
+// Pilar qualidade: sup.esq.  (fatias 0,1,2)
+// Pilar pessoal:   sup.dir.  (fatias 3,4,5)
+// Pilar prof:      inf.dir.  (fatias 6,7,8)
+// Pilar relac:     inf.esq.  (fatias 9,10,11)
+const RODA_ORDEM_FATIAS = [
+  // Quadrante superior esquerdo → Qualidade de Vida
+  { pilarIdx: 0, areaIdx: 0 }, // Diversão
+  { pilarIdx: 0, areaIdx: 1 }, // Felicidade
+  { pilarIdx: 0, areaIdx: 2 }, // Espiritualidade
+  // Quadrante superior direito → Pessoal
+  { pilarIdx: 1, areaIdx: 0 }, // Saúde Física
+  { pilarIdx: 1, areaIdx: 1 }, // Intelectual
+  { pilarIdx: 1, areaIdx: 2 }, // Saúde Emocional
+  // Quadrante inferior direito → Profissional
+  { pilarIdx: 3, areaIdx: 0 }, // Contribuição Social
+  { pilarIdx: 3, areaIdx: 1 }, // Recursos Financeiros
+  { pilarIdx: 3, areaIdx: 2 }, // Carreira
+  // Quadrante inferior esquerdo → Relacionamentos
+  { pilarIdx: 2, areaIdx: 0 }, // Amor
+  { pilarIdx: 2, areaIdx: 1 }, // Família
+  { pilarIdx: 2, areaIdx: 2 }, // Vida Social
+];
+
+// ── Estado da Roda ───────────────────────────────────
+let rodaPilarAtual = 0;          // 0–3
+let rodaNotas = {};              // { id: nota }
+let rodaAtualNotas = {};         // notas da roda mais recente carregada
+let rodaAtualId = null;          // id da roda ativa
+let rodaAtualDataHora = null;    // dataHora da roda ativa
+let rodaGirando = false;
+let rodaAnimFrame = null;
+let rodaAnguloAtual = 0;
+
+// ── NAVEGAÇÃO ────────────────────────────────────────
+
+function abrirRodaDaVida() {
+  // Verifica se já tem roda preenchida (nos últimos 15 dias)
+  const token = sessionStorage.getItem('re-token');
+  if (!token) return;
+
+  // Tenta carregar rodas salvas antes de decidir o fluxo
+  carregarRodasDaVida().then(rodas => {
+    const rodaAtiva = rodas ? rodas.find(r => r.correcao !== 'corrigida') : null;
+    if (rodaAtiva) {
+      const dataRoda = parseDatePtBR(rodaAtiva.dataHora);
+      const diasPassados = Math.floor((Date.now() - dataRoda) / (1000*60*60*24));
+      if (diasPassados < 15) {
+        // Dentro dos 15 dias → mostra resultado da roda existente
+        rodaAtualNotas = extrairNotasDeRoda(rodaAtiva);
+        rodaAtualId    = rodaAtiva.id;
+        rodaAtualDataHora = rodaAtiva.dataHora;
+        mostrarResultadoRoda(rodaAtiva, diasPassados);
+        return;
+      }
+    }
+    // Sem roda ativa ou já passou 15 dias → novo preenchimento
+    rodaNotas = {};
+    rodaPilarAtual = 0;
+    document.getElementById('screen-landing').classList.remove('active');
+    document.getElementById('screen-roda-intro').classList.add('active');
+  });
+}
+
+function fecharRodaIntro() {
+  document.getElementById('screen-roda-intro').classList.remove('active');
+  document.getElementById('screen-landing').classList.add('active');
+}
+
+function irParaFraseRoda() {
+  document.getElementById('screen-roda-intro').classList.remove('active');
+  document.getElementById('screen-roda-frase').classList.add('active');
+}
+
+function iniciarPreenchimentoRoda() {
+  document.getElementById('screen-roda-frase').classList.remove('active');
+  rodaPilarAtual = 0;
+  renderPilarRoda();
+  document.getElementById('screen-roda-pilar').classList.add('active');
+}
+
+function voltarPilarRoda() {
+  if (rodaPilarAtual === 0) {
+    document.getElementById('screen-roda-pilar').classList.remove('active');
+    document.getElementById('screen-roda-frase').classList.add('active');
+  } else {
+    rodaPilarAtual--;
+    renderPilarRoda();
+  }
+}
+
+function avancarPilarRoda() {
+  const pilar = RODA_PILARES[rodaPilarAtual];
+  // Verifica se todas as 3 áreas têm nota
+  for (const area of pilar.areas) {
+    if (rodaNotas[area.id] === undefined) {
+      alert('Por favor, dê uma nota para todas as áreas antes de continuar.');
+      return;
+    }
+  }
+  if (rodaPilarAtual < RODA_PILARES.length - 1) {
+    rodaPilarAtual++;
+    renderPilarRoda();
+    document.getElementById('screen-roda-pilar').scrollTo(0, 0);
+  } else {
+    // Todas as 12 notas preenchidas → salva e mostra resultado
+    finalizarPreenchimentoRoda();
+  }
+}
+
+// ── RENDER DO PILAR ──────────────────────────────────
+function renderPilarRoda() {
+  const pilar = RODA_PILARES[rodaPilarAtual];
+  const titulo = document.getElementById('roda-pilar-titulo');
+  titulo.innerHTML = `<em style="color:${pilar.cor}">${pilar.nome}</em>`;
+
+  const prog = document.getElementById('roda-pilar-progresso');
+  prog.textContent = `Pilar ${rodaPilarAtual + 1} de ${RODA_PILARES.length}`;
+
+  const btn = document.getElementById('roda-pilar-btn-avancar');
+  btn.style.background = pilar.cor;
+  btn.textContent = rodaPilarAtual < RODA_PILARES.length - 1 ? 'Próximo pilar →' : 'Ver minha Roda da Vida →';
+
+  const c = document.getElementById('roda-pilar-conteudo');
+  c.innerHTML = pilar.areas.map(area => {
+    const nota = rodaNotas[area.id] !== undefined ? rodaNotas[area.id] : 5;
+    const gradiente = `linear-gradient(to right, ${pilar.cor} 0%, ${pilar.cor} ${nota*10}%, var(--border-input) ${nota*10}%, var(--border-input) 100%)`;
+    return `
+      <div class="roda-area-card">
+        <div class="roda-area-nome">${area.nome}</div>
+        <div class="roda-area-perguntas">${area.perguntas}</div>
+        <div class="roda-slider-wrap">
+          <input type="range" class="roda-slider" min="0" max="10" step="1"
+            value="${nota}"
+            id="slider-${area.id}"
+            style="background:${gradiente}"
+            oninput="atualizarSlider('${area.id}', this.value, '${pilar.cor}')"
+          >
+          <span class="roda-slider-val" id="val-${area.id}" style="color:${pilar.cor}">${nota}</span>
+        </div>
+        <div class="roda-slider-labels">
+          <span>0 · não pode piorar</span>
+          <span>10 · não pode melhorar</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Inicializa notas com 5 se ainda não tiver (padrão)
+  pilar.areas.forEach(area => {
+    if (rodaNotas[area.id] === undefined) rodaNotas[area.id] = 5;
+  });
+}
+
+function atualizarSlider(areaId, valor, cor) {
+  rodaNotas[areaId] = parseInt(valor);
+  const valEl = document.getElementById('val-' + areaId);
+  if (valEl) valEl.textContent = valor;
+  const slider = document.getElementById('slider-' + areaId);
+  if (slider) {
+    const pct = parseInt(valor) * 10;
+    slider.style.background = `linear-gradient(to right, ${cor} 0%, ${cor} ${pct}%, var(--border-input) ${pct}%, var(--border-input) 100%)`;
+  }
+}
+
+// ── FINALIZAR E SALVAR ───────────────────────────────
+async function finalizarPreenchimentoRoda() {
+  const token = sessionStorage.getItem('re-token');
+  if (!token) return;
+
+  const btn = document.getElementById('roda-pilar-btn-avancar');
+  if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
+
+  try {
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        acao: 'salvarRodaDaVida',
+        token,
+        notas: rodaNotas,
+        compromisso: ''
+      })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      rodaAtualId    = data.id;
+      rodaAtualNotas = { ...rodaNotas };
+      rodaAtualDataHora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+    }
+  } catch(e) {
+    // Continua mesmo sem salvar — exibe a roda localmente
+    rodaAtualNotas = { ...rodaNotas };
+  }
+
+  if (btn) { btn.disabled = false; }
+  document.getElementById('screen-roda-pilar').classList.remove('active');
+  mostrarResultadoRoda(null, 0);
+}
+
+// ── TELA DE RESULTADO ────────────────────────────────
+function mostrarResultadoRoda(rodaObj, diasPassados) {
+  // Oculta todas as telas
+  ['screen-landing','screen-roda-intro','screen-roda-frase','screen-roda-pilar'].forEach(id => {
+    document.getElementById(id)?.classList.remove('active');
+  });
+  document.getElementById('screen-roda-resultado').classList.add('active');
+
+  // Aviso dos 15 dias
+  const avisoEl = document.getElementById('roda-aviso-dias');
+  const btnCorrigir = document.getElementById('btn-corrigir-roda');
+  if (rodaObj && diasPassados < 15) {
+    const faltam = 15 - diasPassados;
+    avisoEl.style.display = 'block';
+    avisoEl.innerHTML = `Sua roda foi preenchida ${diasPassados === 0 ? 'hoje' : `há ${diasPassados} dia${diasPassados > 1 ? 's' : ''}`}. <strong>Faltam ${faltam} dia${faltam > 1 ? 's' : ''} para refazer.</strong>`;
+    btnCorrigir.style.display = 'block';
+  } else {
+    avisoEl.style.display = 'none';
+    btnCorrigir.style.display = 'none';
+  }
+
+  // Notas a usar
+  const notas = (rodaObj ? extrairNotasDeRoda(rodaObj) : rodaAtualNotas);
+
+  // Desenha a roda
+  setTimeout(() => desenharRoda('canvas-roda-resultado', notas), 80);
+
+  // Compromisso
+  const compTexto = rodaObj ? decodificarCarta(rodaObj.compromisso || '') : '';
+  renderCompromissoRoda(compTexto);
+}
+
+function fecharResultadoRoda() {
+  document.getElementById('screen-roda-resultado').classList.remove('active');
+  document.getElementById('screen-landing').classList.add('active');
+  mostrarBoasVindas();
+}
+
+// ── CORRIGIR RODA ────────────────────────────────────
+function corrigirRoda() {
+  if (!confirm('Você vai refazer sua Roda da Vida. A versão atual será salva no histórico. Deseja continuar?')) return;
+  rodaNotas = { ...rodaAtualNotas }; // começa com as notas atuais
+  rodaPilarAtual = 0;
+  document.getElementById('screen-roda-resultado').classList.remove('active');
+  renderPilarRoda();
+  document.getElementById('screen-roda-pilar').classList.add('active');
+}
+
+// ── COMPROMISSO ──────────────────────────────────────
+function renderCompromissoRoda(textoSalvo) {
+  const box = document.getElementById('roda-compromisso-conteudo');
+  if (!box) return;
+
+  if (textoSalvo) {
+    box.innerHTML = `
+      <div class="roda-compromisso-texto-salvo">${textoSalvo.replace(/\n/g,'<br>')}</div>
+      <button class="btn-editar-compromisso" onclick="editarCompromissoRoda('${textoSalvo.replace(/'/g,"\\'")}')">✏️ Editar</button>
+    `;
+  } else {
+    // Caixinha com linhas de caderno
+    const linhas = Array(4).fill('<div class="roda-compromisso-linha"></div>').join('');
+    box.innerHTML = `
+      <div class="roda-compromisso-linhas">${linhas}</div>
+      <button class="btn-editar-compromisso" onclick="editarCompromissoRoda('')">✏️ Editar</button>
+    `;
+  }
+}
+
+function editarCompromissoRoda(textoAtual) {
+  const box = document.getElementById('roda-compromisso-conteudo');
+  if (!box) return;
+  box.innerHTML = `
+    <textarea class="roda-compromisso-textarea" id="ta-compromisso-roda"
+      placeholder="Ex: Vou dedicar 20 minutos por dia para caminhar e usar meu Método Reset para registrar como me sinto depois."
+    >${textoAtual}</textarea>
+    <div style="display:flex;gap:10px;">
+      <button class="btn-editar-compromisso" onclick="salvarCompromissoRoda()">💚 Salvar compromisso</button>
+      <button class="btn-editar-compromisso" style="border-color:var(--border-input);color:var(--text-tertiary)" onclick="renderCompromissoRoda('${textoAtual.replace(/'/g,"\\'")}')">Cancelar</button>
+    </div>
+  `;
+  document.getElementById('ta-compromisso-roda')?.focus();
+}
+
+async function salvarCompromissoRoda() {
+  const token = sessionStorage.getItem('re-token');
+  const texto = document.getElementById('ta-compromisso-roda')?.value?.trim() || '';
+  const textoCod = codificarCarta(texto);
+
+  renderCompromissoRoda(texto); // mostra imediatamente
+
+  if (!token || !rodaAtualId) return;
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ acao: 'salvarCompromissoRoda', token, id: rodaAtualId, compromisso: textoCod })
+    });
+  } catch(e) {}
+}
+
+// ── HISTÓRICO DE RODAS ───────────────────────────────
+async function abrirHistoricoRodas() {
+  document.getElementById('screen-roda-resultado').classList.remove('active');
+  document.getElementById('screen-roda-historico').classList.add('active');
+
+  const cont = document.getElementById('roda-historico-conteudo');
+  cont.innerHTML = '<p style="font-size:13px;color:var(--text-tertiary);font-family:\'Poppins\',sans-serif;padding:20px 0;">Carregando...</p>';
+
+  const token = sessionStorage.getItem('re-token');
+  if (!token) return;
+
+  const rodas = await carregarRodasDaVida();
+  if (!rodas || rodas.length === 0) {
+    cont.innerHTML = '<p style="font-size:13px;color:var(--text-tertiary);font-family:\'Poppins\',sans-serif;padding:20px 0;">Nenhuma roda encontrada.</p>';
+    return;
+  }
+
+  cont.innerHTML = rodas.map((roda, idx) => {
+    const notas = extrairNotasDeRoda(roda);
+    const canvasId = `canvas-hist-${idx}`;
+    const isAtiva = roda.correcao !== 'corrigida';
+    const badgeHtml = isAtiva
+      ? `<span class="roda-historico-badge" style="background:rgba(74,94,66,0.15);color:var(--green)">ATIVA</span>`
+      : `<span class="roda-historico-badge" style="background:var(--bg-input);color:var(--text-tertiary)">HISTÓRICO</span>`;
+
+    const compTexto = decodificarCarta(roda.compromisso || '');
+
+    return `
+      <div class="roda-historico-item">
+        <div class="roda-historico-data">${roda.dia}/${roda.mes.substring(0,3)} ${roda.ano} ${badgeHtml}</div>
+        <div class="roda-canvas-wrap" style="max-width:240px;margin-bottom:14px;">
+          <canvas id="${canvasId}" width="240" height="240"></canvas>
+        </div>
+        <button class="btn-girar-roda" style="max-width:240px;margin:0 auto 14px;display:flex;" onclick="girarRoda('${canvasId}', ${JSON.stringify(notas).replace(/"/g,"'")})">🌀 Girar</button>
+        ${compTexto ? `
+          <div style="font-size:12px;color:var(--text-tertiary);font-family:'Poppins',sans-serif;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;">Compromisso</div>
+          <div style="font-family:'Lora',serif;font-size:13px;color:var(--text-secondary);line-height:1.6;font-style:italic;">${compTexto.replace(/\n/g,'<br>')}</div>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+
+  // Desenha todas as rodas após o HTML ser inserido
+  setTimeout(() => {
+    rodas.forEach((roda, idx) => {
+      const notas = extrairNotasDeRoda(roda);
+      desenharRoda(`canvas-hist-${idx}`, notas);
+    });
+  }, 100);
+}
+
+function fecharHistoricoRodas() {
+  document.getElementById('screen-roda-historico').classList.remove('active');
+  document.getElementById('screen-roda-resultado').classList.add('active');
+}
+
+// ── CARREGAR RODAS DO SHEETS ─────────────────────────
+async function carregarRodasDaVida() {
+  const token = sessionStorage.getItem('re-token');
+  if (!token) return null;
+  try {
+    const url = `${APPS_SCRIPT_URL}?acao=getRodasDaVida&token=${encodeURIComponent(token)}`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    if (data.ok) return data.rodas || [];
+  } catch(e) {}
+  return null;
+}
+
+// ── HELPERS ──────────────────────────────────────────
+function extrairNotasDeRoda(roda) {
+  return {
+    diversao:            roda.diversao,
+    felicidade:          roda.felicidade,
+    espiritualidade:     roda.espiritualidade,
+    amor:                roda.amor,
+    familia:             roda.familia,
+    vidaSocial:          roda.vidaSocial,
+    contribuicaoSocial:  roda.contribuicaoSocial,
+    recursosFinanceiros: roda.recursosFinanceiros,
+    carreira:            roda.carreira,
+    saudeFisica:         roda.saudeFisica,
+    intelectual:         roda.intelectual,
+    saudeEmocional:      roda.saudeEmocional
+  };
+}
+
+function parseDatePtBR(str) {
+  // Formato: "DD/MM/YYYY, HH:MM:SS"
+  try {
+    const p = str.split(/[\/,\s:]+/);
+    return new Date(Number(p[2]), Number(p[1])-1, Number(p[0]));
+  } catch(e) { return new Date(); }
+}
+
+// ── DESENHO DA RODA (Canvas) ─────────────────────────
+// A roda é dividida em 12 fatias iguais (30° cada).
+// Ordem das fatias no canvas (sentido horário, início no topo):
+//   0–2: Qualidade de Vida (verde)  → quadrante sup.esq. (270°–360°/0°–90° dividido)
+//   3–5: Pessoal (bege)             → quadrante sup.dir.
+//   6–8: Profissional (laranja)     → quadrante inf.dir.
+//   9–11: Relacionamentos (cinza)   → quadrante inf.esq.
+
+function desenharRoda(canvasId, notas) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx  = canvas.getContext('2d');
+  const size = canvas.width;
+  const cx   = size / 2;
+  const cy   = size / 2;
+  const R    = size * 0.44; // raio máximo (nota 10)
+  const fatia = (Math.PI * 2) / 12; // 30° em radianos
+  const startAngle = -Math.PI / 2;  // começa no topo
+
+  ctx.clearRect(0, 0, size, size);
+
+  // Círculos de referência (notas 2,4,6,8,10)
+  ctx.save();
+  for (let n = 2; n <= 10; n += 2) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * (n/10), 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(128,128,128,0.12)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Linhas divisórias entre fatias
+  ctx.save();
+  for (let i = 0; i < 12; i++) {
+    const ang = startAngle + i * fatia;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(ang) * R, cy + Math.sin(ang) * R);
+    ctx.strokeStyle = 'rgba(128,128,128,0.15)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Fatias preenchidas
+  RODA_ORDEM_FATIAS.forEach((ref, i) => {
+    const pilar = RODA_PILARES[ref.pilarIdx];
+    const area  = pilar.areas[ref.areaIdx];
+    const nota  = (notas[area.id] !== undefined ? notas[area.id] : 0);
+    const raio  = R * (nota / 10);
+
+    if (raio < 1) return; // nota 0 → não desenha
+
+    const ang0 = startAngle + i * fatia;
+    const ang1 = ang0 + fatia;
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, raio, ang0, ang1);
+    ctx.closePath();
+    ctx.fillStyle = hexToRGBA(pilar.cor, 0.75);
+    ctx.fill();
+    ctx.strokeStyle = pilar.cor;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  });
+
+  // Borda externa do círculo
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, 0, Math.PI*2);
+  ctx.strokeStyle = 'rgba(128,128,128,0.2)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Ponto central
+  ctx.beginPath();
+  ctx.arc(cx, cy, 4, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(128,128,128,0.4)';
+  ctx.fill();
+}
+
+function hexToRGBA(hex, alpha) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// ── ANIMAÇÃO DE GIRO ─────────────────────────────────
+// A roda gira no próprio lugar com solavancos proporcionais
+// ao desequilíbrio das notas.
+
+function girarRoda(canvasId, notas) {
+  if (rodaGirando) {
+    cancelAnimationFrame(rodaAnimFrame);
+    rodaGirando = false;
+    // Redesenha sem rotação
+    setTimeout(() => desenharRoda(canvasId, notas), 50);
+    return;
+  }
+
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+
+  rodaGirando  = true;
+  rodaAnguloAtual = 0;
+
+  // Calcula o desequilíbrio (0 = perfeita, 1 = máximo)
+  const notasArr = RODA_ORDEM_FATIAS.map(ref => {
+    const area = RODA_PILARES[ref.pilarIdx].areas[ref.areaIdx];
+    return (notas[area.id] !== undefined ? notas[area.id] : 0);
+  });
+  const media   = notasArr.reduce((a,b) => a+b, 0) / notasArr.length;
+  const desvio  = Math.sqrt(notasArr.reduce((a,b) => a + Math.pow(b - media, 2), 0) / notasArr.length);
+  const deseq   = Math.min(desvio / 5, 1); // normaliza 0–1
+
+  // Velocidade e duração
+  const totalFrames = 180; // ~3 segundos a 60fps
+  let frame = 0;
+
+  function tick() {
+    if (!rodaGirando || frame >= totalFrames) {
+      rodaGirando = false;
+      desenharRodaRotacionada(canvas, notas, 0); // volta à posição original
+      return;
+    }
+
+    // Ângulo base: rotação suave
+    const progresso   = frame / totalFrames;
+    const velocidade  = Math.sin(progresso * Math.PI); // acelera e desacelera
+    rodaAnguloAtual   = progresso * Math.PI * 6; // ~3 voltas completas
+
+    // Solavanco: oscilação vertical proporcional ao desequilíbrio
+    const solavanco   = deseq * 18 * Math.abs(Math.sin(rodaAnguloAtual * 3));
+
+    desenharRodaRotacionada(canvas, notas, rodaAnguloAtual, solavanco);
+    frame++;
+    rodaAnimFrame = requestAnimationFrame(tick);
+  }
+
+  tick();
+}
+
+function desenharRodaRotacionada(canvas, notas, angulo, solavanco) {
+  solavanco = solavanco || 0;
+  const ctx  = canvas.getContext('2d');
+  const size = canvas.width;
+  const cx   = size / 2;
+  const cy   = size / 2 + solavanco;
+  const R    = size * 0.44;
+  const fatia = (Math.PI * 2) / 12;
+  const startAngle = -Math.PI / 2 + angulo;
+
+  ctx.clearRect(0, 0, size, size);
+
+  // Círculos de referência
+  ctx.save();
+  for (let n = 2; n <= 10; n += 2) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * (n/10), 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(128,128,128,0.10)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Fatias
+  RODA_ORDEM_FATIAS.forEach((ref, i) => {
+    const pilar = RODA_PILARES[ref.pilarIdx];
+    const area  = pilar.areas[ref.areaIdx];
+    const nota  = (notas[area.id] !== undefined ? notas[area.id] : 0);
+    const raio  = R * (nota / 10);
+    if (raio < 1) return;
+
+    const ang0 = startAngle + i * fatia;
+    const ang1 = ang0 + fatia;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, raio, ang0, ang1);
+    ctx.closePath();
+    ctx.fillStyle = hexToRGBA(pilar.cor, 0.75);
+    ctx.fill();
+    ctx.strokeStyle = pilar.cor;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  });
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, 0, Math.PI*2);
+  ctx.strokeStyle = 'rgba(128,128,128,0.18)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, 4, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(128,128,128,0.4)';
+  ctx.fill();
+}
+
+// Garante que ao entrar no app a roda seja verificada
+// (chamado dentro de mostrarBoasVindas)
+function verificarBotaoRodaLanding() {
+  // O botão já está visível — a lógica de roda ativa é tratada em abrirRodaDaVida()
+  // Esta função existe para extensões futuras.
 }
 </script>
 </body>
