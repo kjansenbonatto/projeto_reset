@@ -10,13 +10,16 @@
 //
 //  v7: adicionada Roda da Vida — bump de versão para forçar
 //  atualização em todos os dispositivos.
+//
+//  v8: correção do horário de lembrete (HTML v10.1) — bump de
+//  versão para que todo mundo receba o arquivo novo.
 // ════════════════════════════════════════════════════════
 
 // NOVO: SDK de push do OneSignal (precisa ficar no topo do arquivo)
 importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
 
 // Mude esta versão a cada deploy para forçar atualização automática
-const CACHE_NAME = 'reset-emocional-v7';
+const CACHE_NAME = 'reset-emocional-v8';
 const ASSETS = [
   '/projeto_reset/',
   '/projeto_reset/index.html',
