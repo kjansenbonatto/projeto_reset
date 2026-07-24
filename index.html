@@ -2574,7 +2574,13 @@ body.theme-light .time-picker-highlight { opacity: 0.5; }
 
 <script>
 // ══════════════════════════════════════════════════════
-//  Reset Emocional v5 · Script principal
+//  Reset Emocional v10.1 · Script principal
+//
+//  CORREÇÃO v10.1 (marcada com "CORRIGIDO v10.1"):
+//  proteção contra horário de lembrete em formato inválido.
+//  Se o valor que chega do Apps Script não for "HH:MM", ele
+//  é descartado e o seletor cai no padrão 19:00, em vez de
+//  ficar posicionado em lugar nenhum.
 // ══════════════════════════════════════════════════════
 
 // ── URL DO APPS SCRIPT ───────────────────────────────
@@ -2652,7 +2658,9 @@ async function tentarAcesso() {
       if (json.nome) sessionStorage.setItem("re-nome", json.nome);
       else sessionStorage.removeItem("re-nome");
       sessionStorage.setItem('re-onboarding-visto', json.onboardingVisto ? '1' : '0'); // NOVO
-      sessionStorage.setItem('re-horario-lembrete', json.horarioLembrete || '');        // NOVO
+      // CORRIGIDO v10.1: só guarda se vier no formato HH:MM
+      sessionStorage.setItem('re-horario-lembrete',
+        horarioValido(json.horarioLembrete) ? String(json.horarioLembrete).trim() : '');
       esconderLogin();
       document.getElementById('screen-landing').classList.add('active');
       mostrarBoasVindas();
@@ -5411,14 +5419,22 @@ function voltarParaLandingAposOnboarding() {
 //  NOVO · SELETOR DE HORÁRIO (estilo despertador)
 //  Reaproveitado tanto no onboarding quanto em Configurações.
 // ════════════════════════════════════════════════════════
+// CORRIGIDO v10.1: confere se o valor é mesmo um horário "HH:MM"
+function horarioValido(h) {
+  return /^([01]?\d|2[0-3]):[0-5]\d$/.test(String(h || '').trim());
+}
+
 function montarTimePicker(idHoras, idMinutos, valorInicial) {
   const colH = document.getElementById(idHoras);
   const colM = document.getElementById(idMinutos);
   if (!colH || !colM) return;
 
-  const partes   = (valorInicial || '19:00').split(':');
-  const hInicial = (partes[0] || '19').padStart(2, '0');
-  const mInicial = arredondarMinuto(partes[1] || '00');
+  // CORRIGIDO v10.1: horário fora do formato cai no padrão, em vez de
+  // deixar o seletor sem posição definida
+  const base     = horarioValido(valorInicial) ? String(valorInicial).trim() : '19:00';
+  const partes   = base.split(':');
+  const hInicial = partes[0].padStart(2, '0');
+  const mInicial = arredondarMinuto(partes[1]);
 
   let htmlH = '<div class="time-picker-pad"></div>';
   for (let h = 0; h < 24; h++) htmlH += `<div class="time-picker-item" data-value="${String(h).padStart(2,'0')}">${String(h).padStart(2,'0')}</div>`;
