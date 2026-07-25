@@ -11,15 +11,17 @@
 //  v7: adicionada Roda da Vida — bump de versão para forçar
 //  atualização em todos os dispositivos.
 //
-//  v8: correção do horário de lembrete (HTML v10.1) — bump de
+//  v8: correção do horário de lembrete (HTML v10.1).
+//
+//  v9: aviso de permissão de notificação (HTML v10.2) — bump de
 //  versão para que todo mundo receba o arquivo novo.
 // ════════════════════════════════════════════════════════
-
+ 
 // NOVO: SDK de push do OneSignal (precisa ficar no topo do arquivo)
 importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
-
+ 
 // Mude esta versão a cada deploy para forçar atualização automática
-const CACHE_NAME = 'reset-emocional-v8';
+const CACHE_NAME = 'reset-emocional-v9';
 const ASSETS = [
   '/projeto_reset/',
   '/projeto_reset/index.html',
@@ -27,7 +29,7 @@ const ASSETS = [
   '/projeto_reset/icon-192.png',
   '/projeto_reset/icon-512.png'
 ];
-
+ 
 // INSTALL — baixa todos os assets na nova versão
 self.addEventListener('install', event => {
   event.waitUntil(
@@ -36,7 +38,7 @@ self.addEventListener('install', event => {
   // Ativa imediatamente sem esperar o app fechar
   self.skipWaiting();
 });
-
+ 
 // ACTIVATE — apaga caches antigos e assume controle imediato
 self.addEventListener('activate', event => {
   event.waitUntil(
@@ -47,13 +49,13 @@ self.addEventListener('activate', event => {
     ).then(() => self.clients.claim()) // assume controle de todas as abas abertas
   );
 });
-
+ 
 // FETCH — rede primeiro, cache como fallback
 // Isso garante que sempre tenta buscar a versão mais recente
 self.addEventListener('fetch', event => {
   // Só intercepta GET
   if (event.request.method !== 'GET') return;
-
+ 
   event.respondWith(
     fetch(event.request)
       .then(response => {
@@ -71,8 +73,9 @@ self.addEventListener('fetch', event => {
       })
   );
 });
-
+ 
 // Avisa o app quando uma nova versão foi ativada
 self.addEventListener('message', event => {
   if (event.data === 'skipWaiting') self.skipWaiting();
 });
+ 
