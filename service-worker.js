@@ -13,7 +13,9 @@
 //
 //  v8: correção do horário de lembrete (HTML v10.1).
 //
-//  v9: aviso de permissão de notificação (HTML v10.2) — bump de
+//  v9: aviso de permissão de notificação (HTML v10.2).
+//
+//  v10: banco rotativo de perguntas (HTML v10.3) — bump de
 //  versão para que todo mundo receba o arquivo novo.
 // ════════════════════════════════════════════════════════
  
@@ -21,7 +23,7 @@
 importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
  
 // Mude esta versão a cada deploy para forçar atualização automática
-const CACHE_NAME = 'reset-emocional-v9';
+const CACHE_NAME = 'reset-emocional-v10';
 const ASSETS = [
   '/projeto_reset/',
   '/projeto_reset/index.html',
