@@ -1710,6 +1710,54 @@ body.theme-light .settings-toggle { border-color: rgba(35,32,26,0.2); }
   font-family: 'Poppins', sans-serif;
 }
 
+/* ── NOVO v10.2 · Status da permissão de notificação ── */
+.perm-status-box {
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto 20px;
+  border-radius: 14px;
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  font-family: 'Poppins', sans-serif;
+}
+.perm-status-box.perm-ativa {
+  background: rgba(74,94,66,0.14);
+  border: 1px solid rgba(74,94,66,0.4);
+}
+.perm-status-box.perm-bloqueada,
+.perm-status-box.perm-pendente {
+  background: rgba(232,96,26,0.10);
+  border: 1px solid rgba(232,96,26,0.35);
+}
+.perm-status-box.perm-indisponivel {
+  background: rgba(200,169,110,0.14);
+  border: 1px solid rgba(200,169,110,0.4);
+}
+.perm-status-box strong { color: var(--text-primary); font-weight: 500; }
+.perm-acao-btn {
+  display: block;
+  margin-top: 12px;
+  background: none;
+  border: 1px solid var(--orange);
+  color: var(--orange);
+  border-radius: 100px;
+  padding: 8px 18px;
+  font-size: 12px;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+}
+.perm-acao-btn:hover { background: rgba(232,96,26,0.08); }
+.perm-passos {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
 /* ── Seletor de horário (estilo despertador) ── */
 .time-picker-wrap {
   position: relative;
@@ -2270,8 +2318,8 @@ body.theme-light .time-picker-highlight { opacity: 0.5; }
   <button class="landing-btn-week" style="margin-bottom:10px" onclick="openComunidade()">💬 Comunidade Emocionadas</button>
   <button class="landing-btn-week" onclick="openWeek()">📅 Ver minha semana</button>
 
-  <!-- Banner: ainda não escolheu horário do lembrete (NOVO) -->
-  <div class="landing-banner-horario" id="landing-banner-horario" style="display:none" onclick="abrirOnboardingHorarioDireto()">
+  <!-- Banner: pendência de horário ou de permissão (destino definido em verificarOnboarding) -->
+  <div class="landing-banner-horario" id="landing-banner-horario" style="display:none">
     <span class="landing-banner-horario-texto" id="landing-banner-horario-texto">Ainda não escolheu seu horário de cuidado? Escolher agora</span>
     <span class="landing-banner-horario-seta">→</span>
   </div>
@@ -2315,8 +2363,10 @@ body.theme-light .time-picker-highlight { opacity: 0.5; }
     <div class="time-picker-col" id="picker-minutes-onboarding"></div>
   </div>
 
+  <div class="perm-status-box" id="onboarding-perm-status" style="display:none"></div>
+
   <button class="landing-btn" id="onboarding-horario-confirmar-btn" onclick="confirmarHorarioOnboarding()">Confirmar horário</button>
-  <button class="onboarding-skip" onclick="pularOnboarding()">Agora não</button>
+  <button class="onboarding-skip" id="onboarding-skip-btn" onclick="pularOnboarding()">Agora não</button>
 </div>
 
 <!-- ══ CONFIGURAÇÕES (NOVO) ══ -->
@@ -2340,6 +2390,7 @@ body.theme-light .time-picker-highlight { opacity: 0.5; }
   <div class="config-section">
     <p class="config-label">Lembrete diário</p>
     <div class="ios-warning-box" id="config-ios-warning" style="display:none">📲 Você está no iPhone — pra receber a notificação, primeiro adicione esse app à tela de início (toque em Compartilhar → Adicionar à Tela de Início).</div>
+    <div class="perm-status-box" id="config-perm-status" style="display:none"></div>
     <p class="onboarding-text" style="max-width:none;margin-bottom:20px;">Escolha o horário em que quer ser lembrada de fazer seu registro.</p>
     <div class="time-picker-wrap">
       <div class="time-picker-highlight"></div>
@@ -2574,7 +2625,15 @@ body.theme-light .time-picker-highlight { opacity: 0.5; }
 
 <script>
 // ══════════════════════════════════════════════════════
-//  Reset Emocional v10.1 · Script principal
+//  Reset Emocional v10.2 · Script principal
+//
+//  NOVO v10.2 (marcado com "NOVO v10.2"):
+//  tratamento da permissão de notificação. O pedido não é
+//  mais disparado quando não pode dar certo (iPhone sem o
+//  app instalado), o resultado passou a ser lido, e o app
+//  avisa em três lugares quando o lembrete não vai chegar:
+//  no onboarding, em Configurações e numa tarja na tela
+//  inicial — que aparece só quando há pendência.
 //
 //  CORREÇÃO v10.1 (marcada com "CORRIGIDO v10.1"):
 //  proteção contra horário de lembrete em formato inválido.
@@ -5261,12 +5320,114 @@ function vincularOneSignal(token) {
   });
 }
 
+// ── NOVO v10.2 · ESTADO DA PERMISSÃO ─────────────────────
+// O navegador só mostra o pedido de permissão UMA vez. Se a pessoa
+// nega, pedir de novo não abre aviso nenhum — some silenciosamente.
+// Por isso nunca disparamos o pedido num momento em que ele não pode
+// dar certo (iPhone sem o app instalado), e sempre lemos o resultado.
+//
+// Estados: 'ativa' | 'bloqueada' | 'pendente' | 'indisponivel'
+function estadoPermissao() {
+  if (isIOSNaoInstalado()) return 'indisponivel';
+  if (!('Notification' in window)) return 'indisponivel';
+  const p = Notification.permission;
+  if (p === 'granted') return 'ativa';
+  if (p === 'denied')  return 'bloqueada';
+  return 'pendente';
+}
+
 // Pede a permissão nativa do navegador — só deve ser chamada a partir de
-// uma ação clara da pessoa (ex: confirmar o horário do lembrete)
-function pedirPermissaoNotificacao() {
-  oneSignalReady(async function(OneSignal) {
-    try { await OneSignal.Notifications.requestPermission(); } catch(e) { console.error('Erro ao pedir permissão:', e); }
+// uma ação clara da pessoa (ex: confirmar o horário do lembrete).
+// Devolve o estado final da permissão.
+async function pedirPermissaoNotificacao() {
+  const atual = estadoPermissao();
+
+  // Nesses três casos pedir não adianta: ou já está resolvido, ou o
+  // navegador não vai mostrar nada. Não gasta a única chance.
+  if (atual !== 'pendente') return atual;
+
+  return new Promise(resolve => {
+    let respondido = false;
+    const finalizar = () => {
+      if (respondido) return;
+      respondido = true;
+      resolve(estadoPermissao());
+    };
+
+    oneSignalReady(async function(OneSignal) {
+      try { await OneSignal.Notifications.requestPermission(); }
+      catch(e) { console.error('Erro ao pedir permissão:', e); }
+      finalizar();
+    });
+
+    // Rede de segurança: se a pessoa ignorar o aviso ou o SDK não
+    // responder, o botão não pode ficar travado em "Salvando..."
+    setTimeout(finalizar, 20000);
   });
+}
+
+// Texto mostrado depois de tentar ativar o lembrete
+function textoPermissao(estado, horario) {
+  const h = horario || sessionStorage.getItem('re-horario-lembrete') || '';
+
+  if (estado === 'ativa') {
+    return {
+      texto: h ? `Pronto. Seu lembrete está ativo e chega às <strong>${h}</strong>.`
+                : 'Pronto. Seu lembrete está ativo.',
+      ajuda: false
+    };
+  }
+  if (estado === 'bloqueada') {
+    return {
+      texto: 'O aviso foi bloqueado neste aparelho. Seu horário está salvo, mas o lembrete não vai chegar enquanto você não liberar isso nas configurações.',
+      ajuda: true
+    };
+  }
+  if (estado === 'indisponivel') {
+    return {
+      texto: 'Seu horário está salvo. Pra receber o lembrete, adicione o app à tela de início — depois é só voltar aqui e ativar.',
+      ajuda: false
+    };
+  }
+  return {
+    texto: 'Seu horário está salvo. O aviso de notificação ainda não foi respondido — sem ele o lembrete não chega.',
+    ajuda: true
+  };
+}
+
+// Instruções para liberar a permissão, conforme o aparelho
+function passosLiberarPermissao() {
+  const ua        = navigator.userAgent;
+  const isIOS     = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+  const isAndroid = /Android/.test(ua);
+
+  if (isIOS) {
+    return 'No iPhone: abra os <strong>Ajustes</strong> do aparelho → <strong>Notificações</strong> → procure <strong>Reset Emocional</strong> → ligue <strong>Permitir notificações</strong>.';
+  }
+  if (isAndroid) {
+    return 'No Android: toque no <strong>cadeado</strong> ao lado do endereço → <strong>Permissões</strong> → <strong>Notificações</strong> → <strong>Permitir</strong>.<br><br>Se você instalou o app na tela de início: <strong>Configurações do celular</strong> → <strong>Apps</strong> → <strong>Reset Emocional</strong> → <strong>Notificações</strong>.';
+  }
+  return 'No computador: clique no <strong>cadeado</strong> na barra de endereço → <strong>Notificações</strong> → <strong>Permitir</strong>. Depois recarregue a página.';
+}
+
+// Preenche uma caixa de status com o estado atual
+function renderCaixaPermissao(idCaixa, estado, horario) {
+  const box = document.getElementById(idCaixa);
+  if (!box) return;
+
+  const msg = textoPermissao(estado, horario);
+  box.className = 'perm-status-box perm-' + estado;
+  box.innerHTML = msg.texto +
+    (msg.ajuda ? `<button class="perm-acao-btn" onclick="mostrarPassosPermissao('${idCaixa}')">Como liberar</button>` : '');
+  box.style.display = 'block';
+}
+
+function mostrarPassosPermissao(idCaixa) {
+  const box = document.getElementById(idCaixa);
+  if (!box) return;
+  box.innerHTML += `<div class="perm-passos">${passosLiberarPermissao()}</div>`;
+  const btn = box.querySelector('.perm-acao-btn');
+  if (btn) btn.remove();
 }
 
 // ════════════════════════════════════════════════════════
@@ -5332,24 +5493,66 @@ function verificarOnboarding() {
     return;
   }
 
+  if (!banner) return;
+  const txtEl = document.getElementById('landing-banner-horario-texto');
+
+  // NOVO v10.2: a tarja agora cobre dois casos — falta escolher horário,
+  // ou o horário está escolhido mas a notificação não vai chegar.
+  // Ela aparece SÓ quando há pendência; quem está com tudo certo não vê nada.
+  const mostrar = (texto, destino) => {
+    if (txtEl) txtEl.textContent = texto;
+    banner.onclick = destino;
+    banner.style.display = 'flex';
+  };
+
   if (!horario) {
-    if (banner) {
-      const txtEl = document.getElementById('landing-banner-horario-texto');
-      if (txtEl) {
-        txtEl.textContent = isIOSNaoInstalado()
-          ? '📲 Instale o app na tela de início pra receber seus lembretes'
-          : 'Ainda não escolheu seu horário de cuidado? Escolher agora';
-      }
-      banner.style.display = 'flex';
-    }
-  } else if (banner) {
-    banner.style.display = 'none';
+    mostrar(
+      isIOSNaoInstalado()
+        ? '📲 Instale o app na tela de início pra receber seus lembretes'
+        : 'Ainda não escolheu seu horário de cuidado? Escolher agora',
+      abrirOnboardingHorarioDireto
+    );
+    return;
   }
+
+  const estado = estadoPermissao();
+
+  if (estado === 'bloqueada') {
+    mostrar('🔕 As notificações estão bloqueadas neste aparelho. Ver como liberar', abrirConfiguracoes);
+    return;
+  }
+  if (estado === 'pendente') {
+    mostrar('🔔 Falta ativar as notificações pra seu lembrete chegar', abrirConfiguracoes);
+    return;
+  }
+  if (estado === 'indisponivel') {
+    mostrar('📲 Instale o app na tela de início pra receber seus lembretes', abrirConfiguracoes);
+    return;
+  }
+
+  banner.style.display = 'none';
 }
 
 function mostrarOnboardingIntro() {
   document.getElementById('screen-landing').classList.remove('active');
   document.getElementById('screen-onboarding-intro').classList.add('active');
+}
+
+// NOVO v10.2: devolve a tela de horário ao estado inicial. Sem isso, o
+// botão poderia continuar como "Continuar →" de uma passagem anterior.
+function resetarTelaHorarioOnboarding() {
+  const box = document.getElementById('onboarding-perm-status');
+  if (box) { box.style.display = 'none'; box.innerHTML = ''; }
+
+  const btn = document.getElementById('onboarding-horario-confirmar-btn');
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = 'Confirmar horário';
+    btn.onclick = confirmarHorarioOnboarding;
+  }
+
+  const skip = document.getElementById('onboarding-skip-btn');
+  if (skip) skip.style.display = '';
 }
 
 function avancarOnboarding() {
@@ -5359,6 +5562,7 @@ function avancarOnboarding() {
   const aviso = document.getElementById('onboarding-ios-warning');
   if (aviso) aviso.style.display = isIOSNaoInstalado() ? 'block' : 'none';
 
+  resetarTelaHorarioOnboarding(); // NOVO v10.2
   montarTimePicker('picker-hours-onboarding', 'picker-minutes-onboarding');
 }
 
@@ -5370,6 +5574,7 @@ function abrirOnboardingHorarioDireto() {
   const aviso = document.getElementById('onboarding-ios-warning');
   if (aviso) aviso.style.display = isIOSNaoInstalado() ? 'block' : 'none';
 
+  resetarTelaHorarioOnboarding(); // NOVO v10.2
   montarTimePicker('picker-hours-onboarding', 'picker-minutes-onboarding', sessionStorage.getItem('re-horario-lembrete') || '');
 }
 
@@ -5379,8 +5584,9 @@ async function confirmarHorarioOnboarding() {
   const btn     = document.getElementById('onboarding-horario-confirmar-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
 
-  pedirPermissaoNotificacao();
-
+  // NOVO v10.2: o horário é salvo ANTES de pedir a permissão. Ele vale
+  // por si só — se a pessoa negar o aviso e liberar depois, o lembrete
+  // já está configurado e passa a funcionar sozinho.
   try {
     await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
@@ -5391,8 +5597,26 @@ async function confirmarHorarioOnboarding() {
   sessionStorage.setItem('re-onboarding-visto', '1');
   sessionStorage.setItem('re-horario-lembrete', horario);
 
+  // NOVO v10.2: agora o resultado do pedido é lido e mostrado
+  const estado = await pedirPermissaoNotificacao();
+
   if (btn) { btn.disabled = false; btn.textContent = 'Confirmar horário'; }
-  voltarParaLandingAposOnboarding();
+
+  if (estado === 'ativa') {
+    // Deu tudo certo — mostra a confirmação e segue sozinho
+    renderCaixaPermissao('onboarding-perm-status', estado, horario);
+    setTimeout(voltarParaLandingAposOnboarding, 1600);
+    return;
+  }
+
+  // Algo impede a notificação — a pessoa precisa ler antes de seguir
+  renderCaixaPermissao('onboarding-perm-status', estado, horario);
+  if (btn) {
+    btn.textContent = 'Continuar →';
+    btn.onclick = voltarParaLandingAposOnboarding;
+  }
+  const skip = document.getElementById('onboarding-skip-btn');
+  if (skip) skip.style.display = 'none';
 }
 
 async function pularOnboarding() {
@@ -5522,6 +5746,8 @@ function abrirConfiguracoes() {
   const aviso = document.getElementById('config-ios-warning');
   if (aviso) aviso.style.display = isIOSNaoInstalado() ? 'block' : 'none';
 
+  renderStatusPermissaoConfig(); // NOVO v10.2
+
   const horarioAtual = sessionStorage.getItem('re-horario-lembrete') || '19:00';
   montarTimePicker('picker-hours-config', 'picker-minutes-config', horarioAtual);
 
@@ -5529,9 +5755,48 @@ function abrirConfiguracoes() {
   if (status) status.textContent = '';
 }
 
+// NOVO v10.2: linha de status da permissão dentro de Configurações
+function renderStatusPermissaoConfig() {
+  const box = document.getElementById('config-perm-status');
+  if (!box) return;
+
+  const estado = estadoPermissao();
+
+  // O aviso de iPhone não instalado já aparece logo acima — não repete
+  if (estado === 'indisponivel') { box.style.display = 'none'; return; }
+
+  if (estado === 'ativa') {
+    box.className = 'perm-status-box perm-ativa';
+    box.innerHTML = 'Notificações <strong>ativas</strong> neste aparelho.';
+    box.style.display = 'block';
+    return;
+  }
+
+  if (estado === 'bloqueada') {
+    box.className = 'perm-status-box perm-bloqueada';
+    box.innerHTML = 'Notificações <strong>bloqueadas</strong> neste aparelho. Seu horário está salvo, mas o lembrete não vai chegar.' +
+      `<button class="perm-acao-btn" onclick="mostrarPassosPermissao('config-perm-status')">Como liberar</button>`;
+    box.style.display = 'block';
+    return;
+  }
+
+  // pendente
+  box.className = 'perm-status-box perm-pendente';
+  box.innerHTML = 'Notificações <strong>ainda não ativadas</strong>. Sem elas o lembrete não chega.' +
+    `<button class="perm-acao-btn" onclick="ativarNotificacoesConfig()">Ativar notificações</button>`;
+  box.style.display = 'block';
+}
+
+// NOVO v10.2: botão de ativar dentro de Configurações
+async function ativarNotificacoesConfig() {
+  await pedirPermissaoNotificacao();
+  renderStatusPermissaoConfig();
+}
+
 function fecharConfiguracoes() {
   document.getElementById('screen-configuracoes').classList.remove('active');
   document.getElementById('screen-landing').classList.add('active');
+  verificarOnboarding(); // NOVO v10.2: atualiza a tarja da tela inicial
 }
 
 async function salvarHorarioConfig() {
@@ -5541,8 +5806,6 @@ async function salvarHorarioConfig() {
   const status  = document.getElementById('config-horario-status');
   if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
 
-  pedirPermissaoNotificacao();
-
   try {
     await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
@@ -5550,10 +5813,15 @@ async function salvarHorarioConfig() {
     });
     sessionStorage.setItem('re-horario-lembrete', horario);
     sessionStorage.setItem('re-onboarding-visto', '1');
-    if (status) status.textContent = 'Horário atualizado! Vale a partir de amanhã.';
+    if (status) status.textContent = 'Horário atualizado. Vale a partir de amanhã.';
   } catch(e) {
     if (status) status.textContent = 'Não deu pra salvar agora, tenta de novo.';
   }
+
+  // NOVO v10.2: pede a permissão depois de salvar e atualiza o status
+  await pedirPermissaoNotificacao();
+  renderStatusPermissaoConfig();
+
   if (btn) { btn.disabled = false; btn.textContent = 'Salvar horário'; }
 }
 
