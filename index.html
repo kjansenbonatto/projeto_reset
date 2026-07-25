@@ -2625,7 +2625,16 @@ body.theme-light .time-picker-highlight { opacity: 0.5; }
 
 <script>
 // ══════════════════════════════════════════════════════
-//  Reset Emocional v10.2 · Script principal
+//  Reset Emocional v10.3 · Script principal
+//
+//  NOVO v10.3 (marcado com "NOVO v10.3"):
+//  banco rotativo de perguntas do diagnóstico. Cada uma das
+//  15 posições passou a ter 3 variações que perguntam a mesma
+//  coisa de jeitos diferentes (45 no total). A escolha é
+//  determinística e travada por registro, então voltar um
+//  bloco ou retomar o rascunho não troca as perguntas.
+//  A polaridade NÃO mudou: todas seguem com pontoNao: true,
+//  e o calcDiagNeed continua idêntico.
 //
 //  NOVO v10.2 (marcado com "NOVO v10.2"):
 //  tratamento da permissão de notificação. O pedido não é
@@ -3464,6 +3473,7 @@ function restoreState() {
     if (!saved.mode) return false; // precisa ter modo definido
     // Garante que campos essenciais existam
     saved.diagRespostas = saved.diagRespostas || {};
+    saved.diagVariantes = saved.diagVariantes || {}; // NOVO v10.3
     saved.diagNeed = saved.diagNeed || null;
     saved.chosenNeed = saved.chosenNeed || null;
     saved.pastEntry = saved.pastEntry || null;
@@ -3477,48 +3487,178 @@ function clearStateCache() {
 }
 
 // ── DIAGNÓSTICO — perguntas ────────────────────────────
+// ── DIAGNÓSTICO — banco de perguntas com rotação (NOVO v10.3) ──
+// Cada posição tem 3 variações que perguntam a MESMA coisa de jeitos
+// diferentes. A variação A é a pergunta original das versões anteriores.
+//
+// IMPORTANTE: todas as variações são escritas na direção afirmativa e
+// mantêm pontoNao: true. Ou seja, a resposta que pontua continua sendo
+// sempre a mesma (Não no modo desafiador, Sim no modo positivo), e o
+// calcDiagNeed segue exatamente como estava — a leitura da pontuação
+// não muda. O que muda é só o texto, para exigir leitura atenta.
 const DIAG_GROUPS = [
   {
     key: 'Corpo', icon: '🌿', label: 'Corpo',
     perguntas: [
-      { texto: 'Estou dormindo bem e acordando descansada?',          pontoNao: true },
-      { texto: 'Meu corpo tem energia ao longo do dia?',              pontoNao: true },
-      { texto: 'Estou me alimentando de um jeito que me faz bem?',    pontoNao: true }
+      { pontoNao: true, variacoes: [
+        'Estou dormindo bem e acordando descansada?',
+        'Tenho conseguido pegar no sono sem ficar rolando na cama?',
+        'Acordo com disposição pra começar o dia?'
+      ]},
+      { pontoNao: true, variacoes: [
+        'Meu corpo tem energia ao longo do dia?',
+        'Chego no fim da tarde ainda com gás pra alguma coisa?',
+        'Consigo atravessar o dia sem sentir que estou arrastando o corpo?'
+      ]},
+      { pontoNao: true, variacoes: [
+        'Estou me alimentando de um jeito que me faz bem?',
+        'Tenho comido com calma, sem ser no automático?',
+        'Minhas refeições desses dias me deixaram bem depois?'
+      ]}
     ]
   },
   {
     key: 'Segurança', icon: '🔒', label: 'Segurança',
     perguntas: [
-      { texto: 'Me sinto tranquila com minha situação financeira?',                    pontoNao: true },
-      { texto: 'Dentro da minha casa consigo me sentir bem e estou tranquila, sem precisar estar sempre alerta?', pontoNao: true },
-      { texto: 'Consigo descansar sem aquela sensação de que algo vai desabar?',       pontoNao: true }
+      { pontoNao: true, variacoes: [
+        'Me sinto tranquila com minha situação financeira?',
+        'Consigo pensar nas contas do mês sem apertar o peito?',
+        'Tenho alguma folga se aparecer um gasto que eu não esperava?'
+      ]},
+      { pontoNao: true, variacoes: [
+        'Dentro da minha casa consigo me sentir bem e estou tranquila, sem precisar estar sempre alerta?',
+        'Minha casa é um lugar onde eu consigo baixar a guarda?',
+        'Quando chego em casa, sinto que posso relaxar de verdade?'
+      ]},
+      { pontoNao: true, variacoes: [
+        'Consigo descansar sem aquela sensação de que algo vai desabar?',
+        'Consigo parar um pouco sem sentir que estou deixando algo desandar?',
+        'Meus dias têm passado sem aquela espera de que algo ruim vem aí?'
+      ]}
     ]
   },
   {
     key: 'Conexões', icon: '🤝', label: 'Conexões · Relacionamentos',
     perguntas: [
-      { texto: 'Tenho pessoas com quem posso ser eu mesma, sem me esconder?',         pontoNao: true },
-      { texto: 'Me sinto vista e ouvida pelas pessoas que importam para mim?',        pontoNao: true },
-      { texto: 'Minhas relações me deixam animada e com energia?',                    pontoNao: true }
+      { pontoNao: true, variacoes: [
+        'Tenho pessoas com quem posso ser eu mesma, sem me esconder?',
+        'Tem alguém pra quem eu contaria como estou de verdade, sem filtrar?',
+        'Alguém já me viu num dia ruim e continuou por perto?'
+      ]},
+      { pontoNao: true, variacoes: [
+        'Me sinto vista e ouvida pelas pessoas que importam para mim?',
+        'Quando eu falo, sinto que as pessoas próximas realmente escutam?',
+        'Alguém percebeu como eu estava esses dias sem eu precisar avisar?'
+      ]},
+      { pontoNao: true, variacoes: [
+        'Minhas relações me deixam animada e com energia?',
+        'Saio dos meus encontros me sentindo melhor do que quando cheguei?',
+        'Tem alguma convivência na minha semana que eu espero com vontade?'
+      ]}
     ]
   },
   {
     key: 'Valor', icon: '💛', label: 'Valor · Estima',
     perguntas: [
-      { texto: 'Falei comigo sem me criticar?',                                            pontoNao: true },
-      { texto: 'Estou segura comigo mesma e gosto de quem eu sou?',                       pontoNao: true },
-      { texto: 'Consigo reconhecer minhas conquistas sem esperar a aprovação de outros?',  pontoNao: true }
+      { pontoNao: true, variacoes: [
+        'Falei comigo sem me criticar?',
+        'Tratei meus erros com a paciência que eu teria com uma amiga?',
+        'Consegui atravessar o dia sem me xingar por dentro?'
+      ]},
+      { pontoNao: true, variacoes: [
+        'Estou segura comigo mesma e gosto de quem eu sou?',
+        'Gosto da pessoa que eu fui nesses últimos dias?',
+        'Consigo me olhar no espelho sem procurar defeito?'
+      ]},
+      { pontoNao: true, variacoes: [
+        'Consigo reconhecer minhas conquistas sem esperar a aprovação de outros?',
+        'Consigo dizer que fiz um bom trabalho mesmo que ninguém comente?',
+        'O que eu fiz esses dias valeu por si só, sem precisar de elogio?'
+      ]}
     ]
   },
   {
     key: 'Crescimento', icon: '🌱', label: 'Crescimento · Propósito',
     perguntas: [
-      { texto: 'O que estou fazendo hoje conecta com quem quero ser?',                pontoNao: true },
-      { texto: 'Sinto que estou caminhando para meus objetivos, mesmo que ainda não tenha alcançado?',      pontoNao: true },
-      { texto: 'Tenho algo que me faz querer o dia de amanhã?',                       pontoNao: true }
+      { pontoNao: true, variacoes: [
+        'O que estou fazendo hoje conecta com quem quero ser?',
+        'Minha rotina de agora leva pra onde eu quero chegar?',
+        'Se eu seguisse vivendo assim por um ano, eu ficaria contente?'
+      ]},
+      { pontoNao: true, variacoes: [
+        'Sinto que estou caminhando para meus objetivos, mesmo que ainda não tenha alcançado?',
+        'Dei algum passo, mesmo pequeno, na direção do que importa pra mim?',
+        'Olhando alguns meses pra trás, consigo ver que saí do lugar?'
+      ]},
+      { pontoNao: true, variacoes: [
+        'Tenho algo que me faz querer o dia de amanhã?',
+        'Tem alguma coisa nos próximos dias que eu espero com vontade?',
+        'Acordo com alguma curiosidade sobre o que vem?'
+      ]}
     ]
   }
 ];
+
+// ── ROTAÇÃO DAS PERGUNTAS (NOVO v10.3) ────────────────
+// A escolha das variações precisa ser DETERMINÍSTICA: o mesmo registro
+// mostra sempre as mesmas perguntas, mesmo que a pessoa volte um bloco,
+// feche o app e retome depois. Por isso a escolha é calculada uma vez
+// no início do diagnóstico e guardada no rascunho (state.diagVariantes).
+// O registro seguinte recebe um conjunto novo.
+
+const DIAG_SEQ_PREFIX = 're-diag-seq-';
+
+function diagSeqKey() {
+  const token = sessionStorage.getItem('re-token') || 'anon';
+  return DIAG_SEQ_PREFIX + token;
+}
+
+// Contador de diagnósticos por pessoa. Só avança quando um novo
+// diagnóstico começa de fato.
+function proximoSeqDiag() {
+  let n = parseInt(localStorage.getItem(diagSeqKey()) || '0', 10);
+  if (isNaN(n) || n < 0) n = 0;
+  n++;
+  try { localStorage.setItem(diagSeqKey(), String(n)); } catch(_) {}
+  return n;
+}
+
+// Mistura o número do registro com a posição da pergunta. Sem essa
+// mistura, todas as posições girariam juntas e o conjunto inteiro
+// repetiria a cada 3 registros.
+function escolherVariante(seq, gi, qi, total) {
+  let h = seq * 2654435761 + (gi + 1) * 40503 + (qi + 1) * 12289;
+  h = h ^ (h >>> 13);
+  h = Math.abs(h);
+  return h % total;
+}
+
+// Define (uma única vez por registro) qual variação cada posição usa
+function garantirVariantesDiag() {
+  if (state.diagVariantes && Object.keys(state.diagVariantes).length > 0) return;
+
+  const seq  = proximoSeqDiag();
+  const mapa = {};
+
+  DIAG_GROUPS.forEach((g, gi) => {
+    g.perguntas.forEach((q, qi) => {
+      const total = (q.variacoes && q.variacoes.length) ? q.variacoes.length : 1;
+      mapa[g.key + '_' + qi] = escolherVariante(seq, gi, qi, total);
+    });
+  });
+
+  state.diagVariantes = mapa;
+  persistState();
+}
+
+// Texto da pergunta conforme a variação sorteada para este registro
+function textoDaPergunta(gKey, q, qi) {
+  if (!q.variacoes || !q.variacoes.length) return q.texto || '';
+  const idx = (state.diagVariantes && state.diagVariantes[gKey + '_' + qi] != null)
+    ? state.diagVariantes[gKey + '_' + qi]
+    : 0;
+  return q.variacoes[idx] || q.variacoes[0];
+}
 
 // Calcula scores do diagnóstico e retorna top-2 necessidades
 // Normaliza por porcentagem para que grupos com mais perguntas não levem vantagem
@@ -3566,6 +3706,7 @@ let state = {
   refinedNeed: null, eventText: '',
   bodyText: '', celebrateText: '', action: null, customAction: '',
   diagRespostas: {},   // { 'Corpo_0': 'sim'|'nao', … }
+  diagVariantes: {},   // NOVO v10.3 { 'Corpo_0': 0|1|2 } variação sorteada
   diagNeed: null,      // { primary: 'Corpo', secondary: 'Segurança' } ou null
   chosenNeed: null,    // necessidade escolhida pela pessoa em caso de empate
   pastEntry: null      // registro anterior da mesma combinação (releitura do passado)
@@ -3666,7 +3807,7 @@ function goToLanding() {
   document.getElementById('screen-diary').classList.remove('active');
   document.getElementById('screen-landing').classList.add('active');
   clearStateCache();
-  state = { step: 0, mode: null, emotion: null, refinedNeed: null, eventText: '', bodyText: '', celebrateText: '', action: null, customAction: '', diagRespostas: {}, diagNeed: null, chosenNeed: null, pastEntry: null };
+  state = { step: 0, mode: null, emotion: null, refinedNeed: null, eventText: '', bodyText: '', celebrateText: '', action: null, customAction: '', diagRespostas: {}, diagVariantes: {}, diagNeed: null, chosenNeed: null, pastEntry: null };
 }
 
 // ── INIT ──────────────────────────────────────────────
@@ -3678,7 +3819,7 @@ function startDiary() {
   // Restaura rascunho se houver progresso salvo
   const hadDraft = restoreState();
   if (!hadDraft) {
-    state = { step: 0, mode: null, emotion: null, refinedNeed: null, eventText: '', bodyText: '', celebrateText: '', action: null, customAction: '', diagRespostas: {}, diagNeed: null, chosenNeed: null, pastEntry: null };
+    state = { step: 0, mode: null, emotion: null, refinedNeed: null, eventText: '', bodyText: '', celebrateText: '', action: null, customAction: '', diagRespostas: {}, diagVariantes: {}, diagNeed: null, chosenNeed: null, pastEntry: null };
   }
 
   setTab('inicio');
@@ -3866,6 +4007,7 @@ function selectRefinement(need) {
 
 // ── DIAGNÓSTICO — tela de introdução ──────────────────
 function renderDiagIntro(c) {
+  garantirVariantesDiag(); // NOVO v10.3: define as variações deste registro
   const prevStep = needsRefinement() ? 3.5 : 3;
   c.innerHTML = `
     <div style="text-align:center;padding:8px 0 16px">
@@ -3885,6 +4027,8 @@ function renderDiagIntro(c) {
 const DIAG_STEPS = [4.1, 4.2, 4.3, 4.4, 4.5];
 
 function renderDiagGroup(c, groupIdx) {
+  garantirVariantesDiag(); // NOVO v10.3: trava as variações deste registro
+
   const g = DIAG_GROUPS[groupIdx];
   const totalGroups = DIAG_GROUPS.length;
   const nextStep = groupIdx < totalGroups - 1 ? DIAG_STEPS[groupIdx + 1] : 5;
@@ -3893,11 +4037,12 @@ function renderDiagGroup(c, groupIdx) {
   const perguntas = g.perguntas.map((q, qi) => {
     const key = g.key + '_' + qi;
     const resp = state.diagRespostas[key];
+    const texto = textoDaPergunta(g.key, q, qi); // NOVO v10.3
 
     if (q.especial) {
       return `
         <div class="diag-q-wrap">
-          <p class="diag-q-text">${q.texto}</p>
+          <p class="diag-q-text">${texto}</p>
           <div class="diag-btn-row">
             <button class="diag-opt ${resp==='energia' ? 'diag-sel-pos' : ''}"
               onclick="setDiag('${key}','energia',this)">Me dão energia</button>
@@ -3908,7 +4053,7 @@ function renderDiagGroup(c, groupIdx) {
     }
     return `
       <div class="diag-q-wrap">
-        <p class="diag-q-text">${q.texto}</p>
+        <p class="diag-q-text">${texto}</p>
         <div class="diag-btn-row">
           <button class="diag-opt ${resp==='sim' ? 'diag-sel-pos' : ''}"
             onclick="setDiag('${key}','sim',this)">Sim</button>
@@ -4530,7 +4675,7 @@ function goTo(s) { state.step = s; render(); }
 
 function resetDiary() {
   clearStateCache();
-  state = { step: 0, mode: null, emotion: null, refinedNeed: null, eventText: '', bodyText: '', celebrateText: '', action: null, customAction: '', diagRespostas: {}, diagNeed: null, chosenNeed: null, pastEntry: null };
+  state = { step: 0, mode: null, emotion: null, refinedNeed: null, eventText: '', bodyText: '', celebrateText: '', action: null, customAction: '', diagRespostas: {}, diagVariantes: {}, diagNeed: null, chosenNeed: null, pastEntry: null };
   render();
 }
 const THEME_KEY = 're-theme';
